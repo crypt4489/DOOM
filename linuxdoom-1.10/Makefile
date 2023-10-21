@@ -1,95 +1,74 @@
-################################################################
-#
-# $Id:$
-#
-# $Log:$
-#
-CC=  gcc  # gcc or g++
+IRX_DIR := ./irx
+ASSETS_DIR := ./assets
+OBJS_DIR := ./objs
+VCL_DIR := ./vcl
+VSM_DIR := ./vcl/vsm
+VSM_OBJ_DIR := ./vcl/vsm/objs
+SRC_DIR := ./ps2
+TARGET_DIR := ./bin
+INC_DIR := ./inc/
+WIN_DIR := /mnt/c/Users/dflet/Desktop/
 
-CFLAGS=-g -Wall -DNORMALUNIX -DLINUX # -DUSEASM 
-LDFLAGS=-L/usr/X11R6/lib
-LIBS=-lXext -lX11 -lnsl -lm
+OBJEXT    := o
+CEXT      := c
+VSMEXT    := vsm
 
-# subdirectory for objects
-O=linux
+EE_BIN = test.elf
+IOP_MOD = sio2man.irx padman.irx sound.irx libsd.irx audsrv.irx
 
-# not too sophisticated dependency
-OBJS=				\
-		$(O)/doomdef.o		\
-		$(O)/doomstat.o		\
-		$(O)/dstrings.o		\
-		$(O)/i_system.o		\
-		$(O)/i_sound.o		\
-		$(O)/i_video.o		\
-		$(O)/i_net.o			\
-		$(O)/tables.o			\
-		$(O)/f_finale.o		\
-		$(O)/f_wipe.o 		\
-		$(O)/d_main.o			\
-		$(O)/d_net.o			\
-		$(O)/d_items.o		\
-		$(O)/g_game.o			\
-		$(O)/m_menu.o			\
-		$(O)/m_misc.o			\
-		$(O)/m_argv.o  		\
-		$(O)/m_bbox.o			\
-		$(O)/m_fixed.o		\
-		$(O)/m_swap.o			\
-		$(O)/m_cheat.o		\
-		$(O)/m_random.o		\
-		$(O)/am_map.o			\
-		$(O)/p_ceilng.o		\
-		$(O)/p_doors.o		\
-		$(O)/p_enemy.o		\
-		$(O)/p_floor.o		\
-		$(O)/p_inter.o		\
-		$(O)/p_lights.o		\
-		$(O)/p_map.o			\
-		$(O)/p_maputl.o		\
-		$(O)/p_plats.o		\
-		$(O)/p_pspr.o			\
-		$(O)/p_setup.o		\
-		$(O)/p_sight.o		\
-		$(O)/p_spec.o			\
-		$(O)/p_switch.o		\
-		$(O)/p_mobj.o			\
-		$(O)/p_telept.o		\
-		$(O)/p_tick.o			\
-		$(O)/p_saveg.o		\
-		$(O)/p_user.o			\
-		$(O)/r_bsp.o			\
-		$(O)/r_data.o			\
-		$(O)/r_draw.o			\
-		$(O)/r_main.o			\
-		$(O)/r_plane.o		\
-		$(O)/r_segs.o			\
-		$(O)/r_sky.o			\
-		$(O)/r_things.o		\
-		$(O)/w_wad.o			\
-		$(O)/wi_stuff.o		\
-		$(O)/v_video.o		\
-		$(O)/st_lib.o			\
-		$(O)/st_stuff.o		\
-		$(O)/hu_stuff.o		\
-		$(O)/hu_lib.o			\
-		$(O)/s_sound.o		\
-		$(O)/z_zone.o			\
-		$(O)/info.o				\
-		$(O)/sounds.o
+#EE_SRC_VSM := $(shell find $(VSM_DIR) -maxdepth 1 -type f -name *.$(VSMEXT))
+#EE_OBJS :=  $(patsubst $(VSM_DIR)/%, $(VSM_OBJ_DIR)/%, $(EE_SRC_VSM:.$(VSMEXT)=.$(OBJEXT)))
+EE_SRC_C += $(shell find $(SRC_DIR) -type f -name *.$(CEXT))
+EE_OBJS += $(patsubst $(SRC_DIR)/%, $(OBJS_DIR)/%, $(EE_SRC_C:.$(CEXT)=.$(OBJEXT)))
 
-all:	 $(O)/linuxxdoom
+EE_DVP = dvp-as
+
+EE_LIBS=-ldma -lgraph -ldraw -lkernel -lpacket -lpad -lcdvd -lpng -lz -lunzip -laudsrv
+
+PS2SDK=/Users/Fletcher_Drew/Documents/ps2build/ps2dev/ps2sdk
+
+LOG_LEVEL?=3
+
+EE_CFLAGS += -DPS_LOG_LVL=$(LOG_LEVEL) -Wall -Wno-char-subscripts --std=gnu99 -I$(INC_DIR)
+EE_LDFLAGS = -L$(PSDSDK)/ee/common/lib -L$(PS2SDK)/ee/lib -L$(PS2SDK)/ports/lib
+
+ISO_TGT=test.iso
+
+include ./Makefile.eeglobal
+include $(PS2SDK)/samples/Makefile.pref
+
+.PHONY : all clean compile directories disc irx update_win
+
+all: compile disc
+
+compile:
+	echo $(EE_OBJS)
+	make
+
+directories:
+	if [ ! -d $(IRX_DIR) ]; then mkdir -p $(IRX_DIR) ; fi
+
+	if [ ! -d $(ASSETS_DIR) ]; then mkdir -p $(ASSETS_DIR) ; fi
+
+	if [ ! -d $(OBJS_DIR) ]; then mkdir -p $(OBJS_DIR) ; fi
+
+	if [ ! -d $(TARGET_DIR) ]; then mkdir -p $(TARGET_DIR) ; fi
+
+	if [ ! -d $(INC_DIR) ]; then mkdir -p $(INC_DIR) ; fi
+
+update_win:
+	cp $(ISO_TGT) $(WIN_DIR)
+
+disc:
+	mkisofs -l -o $(ISO_TGT) $(TARGET_DIR)/$(EE_BIN) SYSTEM.CNF $(IRX_DIR) $(ASSETS_DIR)
+
+irx:
+	mv $(IOP_MOD) "$(IRX_DIR)"
 
 clean:
-	rm -f *.o *~ *.flc
-	rm -f linux/*
+	rm -rf $(ISO_TGT) $(TARGET_DIR)/$(EE_BIN) $(EE_OBJS)
 
-$(O)/linuxxdoom:	$(OBJS) $(O)/i_main.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS) $(O)/i_main.o \
-	-o $(O)/linuxxdoom $(LIBS)
-
-$(O)/%.o:	%.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-#############################################################
-#
-#############################################################
+%.vcl:
+	make -B -C $(VCL_DIR) $@
+	
+		
