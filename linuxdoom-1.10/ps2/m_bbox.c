@@ -38,8 +38,8 @@ rcsid[] = "$Id: m_bbox.c,v 1.1 1997/02/03 22:45:10 b1 Exp $";
 
 void M_ClearBox (fixed_t *box)
 {
-    box[BOXTOP] = box[BOXRIGHT] = MININT;
-    box[BOXBOTTOM] = box[BOXLEFT] = MAXINT;
+    box[BOXTOP] = box[BOXRIGHT] = -2147483648;
+    box[BOXBOTTOM] = box[BOXLEFT] = 2147483647;
 }
 
 void

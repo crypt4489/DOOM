@@ -33,16 +33,9 @@ rcsid[] = "$Id: i_unix.c,v 1.5 1997/02/03 22:45:10 b1 Exp $";
 #include <sys/time.h>
 #include <sys/types.h>
 
-#ifndef LINUX
-#include <sys/filio.h>
-#endif
-
 #include <fcntl.h>
 #include <unistd.h>
-#include <sys/ioctl.h>
 
-// Linux voxware output.
-#include <linux/soundcard.h>
 
 // Timer stuff. Experimental.
 #include <time.h>
@@ -162,10 +155,10 @@ myioctl
   int	command,
   int*	arg )
 {   
-    int		rc;
+    int		rc = 0;
     extern int	errno;
     
-    rc = ioctl(fd, command, arg);  
+   // rc = ioctl(fd, command, arg);  
     if (rc < 0)
     {
 	fprintf(stderr, "ioctl(dsp,%d,arg) failed\n", command);
@@ -956,7 +949,7 @@ int I_SoundSetTimer( int duration_of_tick )
 #ifndef sun    
   //ac	t.sa_mask = _sig;
 #endif
-  act.sa_flags = SA_RESTART;
+  //act.sa_flags = SA_RESTART;
   
   sigaction( sig, &act, &oact );
 
