@@ -27,12 +27,6 @@ rcsid[] = "$Id: i_x.c,v 1.6 1997/02/03 22:45:10 b1 Exp $";
 #include <stdlib.h>
 #include <unistd.h>
 
-// Had to dig up XShm.c for this one.
-// It is in the libXext, but not in the XFree86 headers.
-#ifdef LINUX
-int XShmGetEventBase( Display* dpy ); // problems with g++?
-#endif
-
 #include <stdarg.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -47,6 +41,8 @@ int XShmGetEventBase( Display* dpy ); // problems with g++?
 
 #include "doomdef.h"
 
+#include "ps_global.h"
+
 #define POINTER_WARP_COUNTDOWN	1
 
 void*	X_display=0;
@@ -57,15 +53,9 @@ void*		X_gc;
 void*		X_event;
 int		X_screen;
 void*	X_visualinfo;
-void*		image;
 int		X_width;
 int		X_height;
 
-// MIT SHared Memory extension.
-boolean		doShm;
-
-void*	X_shminfo;
-int		X_shmeventtype;
 
 // Fake mouse handling.
 // This cannot work properly w/o DGA.
@@ -80,6 +70,8 @@ int		doPointerWarp = POINTER_WARP_COUNTDOWN;
 static int	multiply=1;
 
 
+
+Texture *image;
 //
 //  Translates the key currently in X_event
 //
@@ -474,43 +466,9 @@ void I_FinishUpdate (void)
   	//Expand4 ((unsigned *)(screens[0]), );
     }
 
-    if (doShm)
-    {
+   
 
-	/*if (!XShmPutImage(	X_display,
-				X_mainWindow,
-				X_gc,
-				image,
-				0, 0,
-				0, 0,
-				X_width, X_height,
-				True ))
-	    I_Error("XShmPutImage() failed\n");
-	*/
-	// wait for it to finish and processes all input events
-	shmFinished = false;
-	do
-	{
-	    I_GetEvent();
-	} while (!shmFinished);
 
-    }
-    else
-    {
-
-	// draw the image
-	/*XPutImage(	X_display,
-			X_mainWindow,
-			X_gc,
-			image,
-			0, 0,
-			0, 0,
-			X_width, X_height );
-
-	// sync up with server
-	XSync(X_display, False);
-	*/
-    }
 
 }
 
@@ -527,7 +485,7 @@ void I_ReadScreen (byte* scr)
 //
 // Palette stuff.
 //
-//static XColor	colors[256];
+static Color colors[256];
 
 void UploadNewPalette(void *cmap, byte *palette)
 {
