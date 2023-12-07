@@ -254,6 +254,16 @@ typedef enum
 #define KEY_ESCAPE	27
 #define KEY_ENTER	13
 #define KEY_TAB		9
+#define KEY_FIRE    10
+#define KEY_CYCLE_RIGHT  11
+#define KEY_CYCLE_LEFT   12
+#define KEY_LOOK_RIGHT   14
+#define KEY_LOOK_LEFT    15
+#define KEY_FORWARD      16
+#define KEY_BACK         17
+#define KEY_MOVE_LEFT    18
+#define KEY_MOVE_RIGHT   19
+#define KEY_SPEED        20
 #define KEY_F1		(0x80+0x3b)
 #define KEY_F2		(0x80+0x3c)
 #define KEY_F3		(0x80+0x3d)
@@ -269,6 +279,7 @@ typedef enum
 
 #define KEY_BACKSPACE	127
 #define KEY_PAUSE	0xff
+#define KEY_SELECT 0xfe
 
 #define KEY_EQUALS	0x3d
 #define KEY_MINUS	0x2d

@@ -56,7 +56,7 @@ void M_StartControlPanel (void);
 
 
 
-
+void M_ClearMenus (void);
 
 
 #endif    

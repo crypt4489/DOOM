@@ -19,7 +19,7 @@
 // DESCRIPTION:
 //
 //-----------------------------------------------------------------------------
-/*
+
 static const char
 rcsid[] = "$Id: m_bbox.c,v 1.1 1997/02/03 22:45:10 b1 Exp $";
 
@@ -73,7 +73,7 @@ boolean NetListen (void);
 // NETWORKING
 //
 
-int	DOOMPORT =	(IPPORT_USERRESERVED +0x1d );
+int	DOOMPORT =	(10000 +0x1d );
 
 int			sendsocket;
 int			insocket;
@@ -92,7 +92,7 @@ int UDPsocket (void)
     int	s;
 	
     // allocate a socket
-    s = socket (PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+   // s = socket (PF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (s<0)
 	I_Error ("can't create socket: %s",strerror(errno));
 		
@@ -115,7 +115,7 @@ BindToLocalPort
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = port;
 			
-    v = bind (s, (void *)&address, sizeof(address));
+    //v = bind (s, (void *)&address, sizeof(address));
     if (v == -1)
 	I_Error ("BindToPort: bind: %s", strerror(errno));
 }
@@ -146,9 +146,9 @@ void PacketSend (void)
     }
 		
     //printf ("sending %i\n",gametic);		
-    c = sendto (sendsocket , &sw, doomcom->datalength
-		,0,(void *)&sendaddress[doomcom->remotenode]
-		,sizeof(sendaddress[doomcom->remotenode]));
+    //c = sendto (sendsocket , &sw, doomcom->datalength
+	//	,0,(void *)&sendaddress[doomcom->remotenode]
+	//	,sizeof(sendaddress[doomcom->remotenode]));
 	
     //	if (c == -1)
     //		I_Error ("SendPacket error: %s",strerror(errno));
@@ -167,8 +167,8 @@ void PacketGet (void)
     doomdata_t		sw;
 				
     fromlen = sizeof(fromaddress);
-    c = recvfrom (insocket, &sw, sizeof(sw), 0
-		  , (struct sockaddr *)&fromaddress, &fromlen );
+  //  c = recvfrom (insocket, &sw, sizeof(sw), 0
+	//	  , (struct sockaddr *)&fromaddress, &fromlen );
     if (c == -1 )
     {
 	if (errno != EWOULDBLOCK)
@@ -226,11 +226,11 @@ int GetLocalAddress (void)
     int			v;
 
     // get local address
-    v = gethostname (hostname, sizeof(hostname));
+  //  v = gethostname (hostname, sizeof(hostname));
     if (v == -1)
 	I_Error ("GetLocalAddress : gethostname: errno %d",errno);
 	
-    hostentry = gethostbyname (hostname);
+    //hostentry = gethostbyname (hostname);
     if (!hostentry)
 	I_Error ("GetLocalAddress : gethostbyname: couldn't get local host");
 		
@@ -307,11 +307,11 @@ void I_InitNetwork (void)
 	if (myargv[i][0] == '.')
 	{
 	    sendaddress[doomcom->numnodes].sin_addr.s_addr 
-		= inet_addr (myargv[i]+1);
+		;//= inet_addr (myargv[i]+1);
 	}
 	else
 	{
-	    hostentry = gethostbyname (myargv[i]);
+	  //  hostentry = gethostbyname (myargv[i]);
 	    if (!hostentry)
 		I_Error ("gethostbyname: couldn't find %s", myargv[i]);
 	    sendaddress[doomcom->numnodes].sin_addr.s_addr 
@@ -326,7 +326,7 @@ void I_InitNetwork (void)
     // build message to receive
     insocket = UDPsocket ();
     BindToLocalPort (insocket,htons(DOOMPORT));
-    ioctl (insocket, FIONBIO, &trueval);
+   // ioctl (insocket, FIONBIO, &trueval);
 
     sendsocket = UDPsocket ();
 }
@@ -346,4 +346,3 @@ void I_NetCmd (void)
 	I_Error ("Bad net cmd: %i\n",doomcom->command);
 }
 
-*/

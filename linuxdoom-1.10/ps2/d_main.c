@@ -75,7 +75,9 @@ static const char rcsid[] = "$Id: d_main.c,v 1.8 1997/02/03 22:45:09 b1 Exp $";
 
 
 #include "d_main.h"
-
+#include "log/ps_log.h"
+#include "io/ps_file_io.h"
+#include "math/ps_misc.h"
 //
 // D-DoomLoop()
 // Not a globally visible function,
@@ -188,7 +190,7 @@ gamestate_t     wipegamestate = GS_DEMOSCREEN;
 extern  boolean setsizeneeded;
 extern  int             showMessages;
 void R_ExecuteSetViewSize (void);
-
+#include "log/ps_log.h"
 void D_Display (void)
 {
     static  boolean		viewactivestate = false;
@@ -197,14 +199,13 @@ void D_Display (void)
     static  boolean		fullscreen = false;
     static  gamestate_t		oldgamestate = -1;
     static  int			borderdrawcount;
-    int				nowtime;
-    int				tics;
-    int				wipestart;
-    int				y;
+    int				nowtime = 0;
+    int				tics = 0;
+    int				wipestart = 0;
+    int				y = 0;
     boolean			done;
     boolean			wipe;
     boolean			redrawsbar;
-
     if (nodrawers)
 	return;                    // for comparative timing / profiling
 		
@@ -226,11 +227,12 @@ void D_Display (void)
     }
     else
 	wipe = false;
-
+	
     if (gamestate == GS_LEVEL && gametic)
 	HU_Erase();
     
     // do buffered drawing
+	
     switch (gamestate)
     {
       case GS_LEVEL:
@@ -238,41 +240,51 @@ void D_Display (void)
 	    break;
 	if (automapactive)
 	    AM_Drawer ();
+	
 	if (wipe || (viewheight != 200 && fullscreen) )
 	    redrawsbar = true;
+	
 	if (inhelpscreensstate && !inhelpscreens)
 	    redrawsbar = true;              // just put away the help screen
+	
 	ST_Drawer (viewheight == 200, redrawsbar );
 	fullscreen = viewheight == 200;
+
 	break;
 
       case GS_INTERMISSION:
+	 
 	WI_Drawer ();
+	
 	break;
 
       case GS_FINALE:
+	
 	F_Drawer ();
 	break;
 
       case GS_DEMOSCREEN:
+	  
 	D_PageDrawer ();
+	
 	break;
     }
-    
+	
     // draw buffered stuff to screen
     I_UpdateNoBlit ();
-    
-    // draw the view directly
-    if (gamestate == GS_LEVEL && !automapactive && gametic)
-	R_RenderPlayerView (&players[displayplayer]);
 
+    // draw the view directly
+    if (gamestate == GS_LEVEL && !automapactive && gametic) 
+	{
+		R_RenderPlayerView (&players[displayplayer]);
+	}
     if (gamestate == GS_LEVEL && gametic)
 	HU_Drawer ();
-    
+
     // clean up border stuff
     if (gamestate != oldgamestate && gamestate != GS_LEVEL)
 	I_SetPalette (W_CacheLumpName ("PLAYPAL",PU_CACHE));
-
+	
     // see if the border needs to be initially drawn
     if (gamestate == GS_LEVEL && oldgamestate != GS_LEVEL)
     {
@@ -299,7 +311,7 @@ void D_Display (void)
     oldgamestate = wipegamestate = gamestate;
     
     // draw pause pic
-    if (paused)
+  /*  if (paused)
     {
 	if (automapactive)
 	    y = 4;
@@ -307,18 +319,24 @@ void D_Display (void)
 	    y = viewwindowy+4;
 	V_DrawPatchDirect(viewwindowx+(scaledviewwidth-68)/2,
 			  y,0,W_CacheLumpName ("M_PAUSE", PU_CACHE));
-    }
-
+    } 
+	*/
+	
 
     // menus go directly to the screen
     M_Drawer ();          // menu is drawn even on top of everything
-    NetUpdate ();         // send out any new accumulation
+    
+
+	
+	NetUpdate ();         // send out any new accumulation
 
 
     // normal update
     if (!wipe)
     {
+		
 	I_FinishUpdate ();              // page flip or blit buffer
+	
 	return;
     }
     
@@ -329,17 +347,27 @@ void D_Display (void)
 
     do
     {
+
 	do
 	{
+		
 	    nowtime = I_GetTime ();
 	    tics = nowtime - wipestart;
-	} while (!tics);
+		
+	} while (tics <= 0);
+
 	wipestart = nowtime;
+	
+	
 	done = wipe_ScreenWipe(wipe_Melt
-			       , 0, 0, SCREENWIDTH, SCREENHEIGHT, tics);
+		       , 0, 0, SCREENWIDTH, SCREENHEIGHT, tics);
+
 	I_UpdateNoBlit ();
-	M_Drawer ();                            // menu is drawn even on top of wipes
+	
+	M_Drawer ();  
+	                         // menu is drawn even on top of wipes
 	I_FinishUpdate ();                      // page flip or blit buffer
+	
     } while (!done);
 }
 
@@ -367,6 +395,7 @@ void D_DoomLoop (void)
 
     while (1)
     {
+		
 	// frame syncronous IO operations
 	I_StartFrame ();                
 	
@@ -374,34 +403,44 @@ void D_DoomLoop (void)
 	if (singletics)
 	{
 	    I_StartTic ();
+		
 	    D_ProcessEvents ();
+		
 	    G_BuildTiccmd (&netcmds[consoleplayer][maketic%BACKUPTICS]);
-	    if (advancedemo)
+	    
+		if (advancedemo)
 		D_DoAdvanceDemo ();
-	    M_Ticker ();
+	    
+		M_Ticker ();
+		
 	    G_Ticker ();
+		
 	    gametic++;
 	    maketic++;
+		
 	}
 	else
 	{
-	    TryRunTics (); // will run at least one tic
-	}
 		
-	S_UpdateSounds (players[consoleplayer].mo);// move positional sounds
-
+	    TryRunTics (); // will run at least one tic	
+	}
+	
+	//S_UpdateSounds (players[consoleplayer].mo);// move positional sounds
 	// Update display, next frame, with current state.
-	D_Display ();
 
+	
+	D_Display ();
+	
 #ifndef SNDSERV
 	// Sound mixing for the buffer is snychronous.
-	I_UpdateSound();
+	//I_UpdateSound();
 #endif	
 	// Synchronous sound output is explicitly called.
 #ifndef SNDINTR
 	// Update sound output.
-	I_SubmitSound();
+	//I_SubmitSound();
 #endif
+	
     }
 }
 
@@ -553,6 +592,8 @@ void D_AddFile (char *file)
     wadfiles[numwadfiles] = newfile;
 }
 
+//static int _access
+
 //
 // IdentifyVersion
 // Checks availability of IWAD files by name,
@@ -571,28 +612,25 @@ void IdentifyVersion (void)
     char*	plutoniawad;
     char*	tntwad;
 
-#ifdef NORMALUNIX
     char *home;
-    char *doomwaddir;
-    doomwaddir = getenv("DOOMWADDIR");
-    if (!doomwaddir)
-	doomwaddir = ".";
+    char *doomwaddir = "";
+
 
     // Commercial.
     doom2wad = malloc(strlen(doomwaddir)+1+9+1);
-    sprintf(doom2wad, "%s/doom2.wad", doomwaddir);
+    sprintf(doom2wad, "DOOM2.WAD", doomwaddir);
 
     // Retail.
     doomuwad = malloc(strlen(doomwaddir)+1+8+1);
-    sprintf(doomuwad, "%s/doomu.wad", doomwaddir);
+    sprintf(doomuwad, "doomu.wad", doomwaddir);
     
     // Registered.
     doomwad = malloc(strlen(doomwaddir)+1+8+1);
-    sprintf(doomwad, "%s/doom.wad", doomwaddir);
+    sprintf(doomwad, "doom.wad", doomwaddir);
     
     // Shareware.
     doom1wad = malloc(strlen(doomwaddir)+1+9+1);
-    sprintf(doom1wad, "%s/doom1.wad", doomwaddir);
+    sprintf(doom1wad, "DOOM1.WAD", doomwaddir);
 
      // Bug, dear Shawn.
     // Insufficient malloc, caused spurious realloc errors.
@@ -607,11 +645,6 @@ void IdentifyVersion (void)
     doom2fwad = malloc(strlen(doomwaddir)+1+10+1);
     sprintf(doom2fwad, "%s/doom2f.wad", doomwaddir);
 
-    home = getenv("HOME");
-    if (!home)
-      I_Error("Please set $HOME to your home directory");
-    sprintf(basedefault, "%s/.doomrc", home);
-#endif
 
     if (M_CheckParm ("-shdev"))
     {
@@ -664,8 +697,9 @@ void IdentifyVersion (void)
 	D_AddFile (doom2fwad);
 	return;
     }
-
-    if ( !access (doom2wad,R_OK) )
+		char doom2wad1path[25]; 
+	Pathify(doom2wad, doom2wad1path);
+    if (FileExist(doom2wad1path) )
     {
 	gamemode = commercial;
 	D_AddFile (doom2wad);
@@ -700,7 +734,9 @@ void IdentifyVersion (void)
       return;
     }
 
-    if ( !access (doom1wad,R_OK) )
+	char doomwad1path[25]; 
+	Pathify(doom1wad, doomwad1path);
+    if ( FileExist(doomwad1path) )
     {
       gamemode = shareware;
       D_AddFile (doom1wad);
@@ -1018,7 +1054,7 @@ void D_DoomMain (void)
 
     printf ("W_Init: Init WADfiles.\n");
     W_InitMultipleFiles (wadfiles);
-    
+    W_InitLocalLumps();
 
     // Check for -file in shareware
     if (modifiedgame)
@@ -1103,7 +1139,7 @@ void D_DoomMain (void)
     D_CheckNetGame ();
 
     printf ("S_Init: Setting up sound.\n");
-    S_Init (snd_SfxVolume /* *8 */, snd_MusicVolume /* *8*/ );
+   // S_Init (snd_SfxVolume /* *8 */, snd_MusicVolume /* *8*/ );
 
     printf ("HU_Init: Setting up heads up display.\n");
     HU_Init ();
@@ -1165,6 +1201,6 @@ void D_DoomMain (void)
 	    D_StartTitle ();                // start up intro loop
 
     }
-
+   //////////("HERE!!!");
     D_DoomLoop ();  // never returns
 }

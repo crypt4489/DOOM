@@ -48,7 +48,7 @@ rcsid[] = "$Id: m_misc.c,v 1.6 1997/02/03 22:45:10 b1 Exp $";
 #include "i_system.h"
 #include "i_video.h"
 #include "v_video.h"
-
+#
 #include "hu_stuff.h"
 
 // State.
@@ -59,6 +59,7 @@ rcsid[] = "$Id: m_misc.c,v 1.6 1997/02/03 22:45:10 b1 Exp $";
 
 #include "m_misc.h"
 
+#include "log/ps_log.h"
 //
 // M_DrawText
 // Returns the final X coordinate
@@ -176,12 +177,17 @@ extern int	key_down;
 
 extern int	key_strafeleft;
 extern int	key_straferight;
+extern int  key_forward;
+extern int  key_back;
+extern int  key_lookright;
+extern int  key_lookleft;
 
 extern int	key_fire;
 extern int	key_use;
 extern int	key_strafe;
 extern int	key_speed;
-
+extern int  key_weaponwheelr;
+extern int  key_weaponwheell;
 extern int	mousebfire;
 extern int	mousebstrafe;
 extern int	mousebforward;
@@ -194,7 +200,7 @@ extern int	joybspeed;
 extern int	viewwidth;
 extern int	viewheight;
 
-extern int	mouseSensitivity;
+extern int	lookSensitivity;
 extern int	showMessages;
 
 extern int	detailLevel;
@@ -233,7 +239,7 @@ typedef struct
 
 default_t	defaults[] =
 {
-    {"mouse_sensitivity",&mouseSensitivity, 5},
+    {"mouse_sensitivity",&lookSensitivity, 5},
     {"sfx_volume",&snd_SfxVolume, 8},
     {"music_volume",&snd_MusicVolume, 8},
     {"show_messages",&showMessages, 1},
@@ -269,14 +275,29 @@ default_t	defaults[] =
     {"mouseb_fire",&mousebfire,0},
     {"mouseb_strafe",&mousebstrafe,1},
     {"mouseb_forward",&mousebforward,2},
-
+    {"key_fire",&key_fire, KEY_FIRE },
+    {"key_use",&key_use, KEY_ENTER },
+    {"key_weaponwheelr",&key_weaponwheelr, KEY_CYCLE_RIGHT},
+    {"key_strafe",&key_strafe, KEY_RALT},
+    {"key_weaponwheell",&key_weaponwheell, KEY_CYCLE_LEFT},
+    {"key_right",&key_right, KEY_RIGHTARROW},
+    {"key_left",&key_left, KEY_LEFTARROW},
+    {"key_up",&key_up, KEY_UPARROW},
+    {"key_down",&key_down, KEY_DOWNARROW},
+    {"key_strafeleft", &key_strafeleft, KEY_MOVE_LEFT},
+    {"key_straferight", &key_straferight, KEY_MOVE_RIGHT},
+    {"key_forward", &key_forward, KEY_FORWARD},
+    {"key_back", &key_back, KEY_BACK},
+    {"key_lookright", &key_lookright, KEY_LOOK_RIGHT},
+    {"key_lookleft", &key_lookleft, KEY_LOOK_LEFT},
+    {"key_speed",&key_speed, KEY_SPEED},
     {"use_joystick",&usejoystick, 0},
     {"joyb_fire",&joybfire,0},
     {"joyb_strafe",&joybstrafe,1},
     {"joyb_use",&joybuse,3},
     {"joyb_speed",&joybspeed,2},
 
-    {"screenblocks",&screenblocks, 9},
+    {"screenblocks",&screenblocks, 10},
     {"detaillevel",&detailLevel, 0},
 
     {"snd_channels",&numChannels, 3},
@@ -364,6 +385,12 @@ void M_LoadDefaults (void)
 	defaultfile = basedefault;
     
     // read the file in, overriding any set defaults
+
+    if (strncmp(defaultfile, "", 1) == 0)
+    {
+        //////////////("No default file");
+        return;
+    }
     f = fopen (defaultfile, "r");
     if (f)
     {

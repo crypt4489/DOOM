@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // $Id:$
@@ -22,7 +22,7 @@
 //-----------------------------------------------------------------------------
 
 static const char
-rcsid[] = "$Id: i_x.c,v 1.6 1997/02/03 22:45:10 b1 Exp $";
+	rcsid[] = "$Id: i_x.c,v 1.6 1997/02/03 22:45:10 b1 Exp $";
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -38,936 +38,416 @@ rcsid[] = "$Id: i_x.c,v 1.6 1997/02/03 22:45:10 b1 Exp $";
 #include "v_video.h"
 #include "m_argv.h"
 #include "d_main.h"
-
+#include "z_zone.h"
 #include "doomdef.h"
-
+// #include <draw2d.h>
+// #include <draw3d.h>
+#include <draw_primitives.h>
+// #include <draw_types.h>
+#include <gif_tags.h>
+#include "pad/ps_pad.h"
+#include "pipelines/ps_pipelineinternal.h"
+#include "gameobject/ps_gameobject.h"
+#include "pipelines/ps_vu1pipeline.h"
+#include "dma/ps_dma.h"
+#include "gs/ps_gs.h"
+#include "system/ps_vumanager.h"
+#include "textures/ps_texture.h"
+#include "system/ps_vif.h"
+#include "pipelines/ps_pipelinecbs.h"
 #include "ps_global.h"
+#include "log/ps_log.h"
+#include "textures/ps_texture.h"
+#include "gs/ps_gs.h"
+#include "gamemanager/ps_manager.h"
+#include "system/ps_timer.h"
 
-#define POINTER_WARP_COUNTDOWN	1
 
-void*	X_display=0;
-void*	X_mainWindow;
-void*	X_cmap;
-void*		X_visual;
-void*		X_gc;
-void*		X_event;
-int		X_screen;
-void*	X_visualinfo;
-int		X_width;
-int		X_height;
 
+extern u32 SKYDOOM_HEIGHT;
+extern u32 SKYDOOM_WIDTH;
+
+u32 SKYDOOM_HEIGHT_HALF;
+u32 SKYDOOM_WIDTH_HALF;
 
 // Fake mouse handling.
 // This cannot work properly w/o DGA.
 // Needs an invisible mouse cursor at least.
-boolean		grabMouse;
-int		doPointerWarp = POINTER_WARP_COUNTDOWN;
-
-// Blocky mode,
-// replace each 320x200 pixel with multiply*multiply pixels.
-// According to Dave Taylor, it still is a bonehead thing
-// to use ....
-static int	multiply=1;
-
-
 
 Texture *image;
-//
-//  Translates the key currently in X_event
-//
 
-int xlatekey(void)
+float timestart, timeend;
+void DrawQuad(int height, int width);
+extern u32 port;
+extern u32 slot;
+extern char padBuf[256];
+static u32 old_pad = 0;
+static u32 new_pad;
+static u32 currData;
+struct padButtonStatus buttons;
+static u32 events_id[16] = {KEY_ESCAPE, KEY_SPEED, 0, KEY_PAUSE, KEY_UPARROW, KEY_RIGHTARROW, KEY_DOWNARROW, KEY_LEFTARROW, 0, KEY_FIRE, KEY_CYCLE_LEFT, KEY_CYCLE_RIGHT, KEY_BACKSPACE, KEY_SELECT, KEY_ENTER, 0};
+static u8 JoyRHPv = 127;
+static u8 JoyLVPv = 127;
+static u8 JoyLHPv = 127;
+
+static u32 lower = 50;
+static u32 upper = 200;
+void UpdatePad()
 {
+	s32 state = padGetState(port, 0);
+	event_t events[5];
+	if (state == PAD_STATE_DISCONN)
+	{
+		ERRORLOG("Pad(%d, %d) is disconnected", port, slot);
+		return;
+	}
 
-    int rc;
-/*
-    switch(rc = XKeycodeToKeysym(X_display, X_event.xkey.keycode, 0))
-    {
-      case XK_Left:	rc = KEY_LEFTARROW;	break;
-      case XK_Right:	rc = KEY_RIGHTARROW;	break;
-      case XK_Down:	rc = KEY_DOWNARROW;	break;
-      case XK_Up:	rc = KEY_UPARROW;	break;
-      case XK_Escape:	rc = KEY_ESCAPE;	break;
-      case XK_Return:	rc = KEY_ENTER;		break;
-      case XK_Tab:	rc = KEY_TAB;		break;
-      case XK_F1:	rc = KEY_F1;		break;
-      case XK_F2:	rc = KEY_F2;		break;
-      case XK_F3:	rc = KEY_F3;		break;
-      case XK_F4:	rc = KEY_F4;		break;
-      case XK_F5:	rc = KEY_F5;		break;
-      case XK_F6:	rc = KEY_F6;		break;
-      case XK_F7:	rc = KEY_F7;		break;
-      case XK_F8:	rc = KEY_F8;		break;
-      case XK_F9:	rc = KEY_F9;		break;
-      case XK_F10:	rc = KEY_F10;		break;
-      case XK_F11:	rc = KEY_F11;		break;
-      case XK_F12:	rc = KEY_F12;		break;
+	state = padRead(port, 0, &buttons);
+
+
+	if (state != 0)
+	{
+		currData = 0xffff ^ buttons.btns;
+
+		new_pad = currData & ~old_pad;
+
+		if (buttons.rjoy_h <= lower && JoyRHPv > lower)
+		{
+			DEBUGLOG("LOOK LEFT PRESSED %d %d", 
+			buttons.rjoy_h, JoyRHPv);
+			events[0].type = ev_keydown;
+			events[0].data1 = KEY_LOOK_LEFT;
+			D_PostEvent(&events[0]);
+			JoyRHPv = buttons.rjoy_h;
+		}
+		 if (buttons.rjoy_h > lower && JoyRHPv <= lower)
+		{
+			DEBUGLOG("LOOK LEFT RELEASED %d %d", 
+			buttons.rjoy_h, JoyRHPv);
+			events[0].type = ev_keyup;
+			events[0].data1 = KEY_LOOK_LEFT;
+			D_PostEvent(&events[0]);
+			JoyRHPv = buttons.rjoy_h;
+		}
+		 if (buttons.rjoy_h >= upper && JoyRHPv < upper)
+		{
+			DEBUGLOG("LOOK RIGHT PRESSED %d %d", 
+			buttons.rjoy_h, JoyRHPv);
+			events[0].type = ev_keydown;
+			events[0].data1 = KEY_LOOK_RIGHT;
+			D_PostEvent(&events[0]);
+			JoyRHPv = buttons.rjoy_h;
+		}
+		 if (buttons.rjoy_h < upper && JoyRHPv >= upper)
+		{
+			DEBUGLOG("LOOK RIGHT RELEASED %d %d", 
+			buttons.rjoy_h, JoyRHPv);
+			events[1].type = ev_keyup;
+			events[1].data1 = KEY_LOOK_RIGHT;
+			D_PostEvent(&events[1]);
+			JoyRHPv = buttons.rjoy_h;
+		}
+
+		if (buttons.ljoy_h <= lower && JoyLHPv > lower)
+		{
+			DEBUGLOG("LEFT PRESSED %d %d", buttons.ljoy_h, JoyLHPv);
+			events[1].type = ev_keydown;
+			events[1].data1 = KEY_MOVE_LEFT;
+			D_PostEvent(&events[1]);
+			JoyLHPv = buttons.ljoy_h;
+		}
+		 if (buttons.ljoy_h > lower && JoyLHPv <= lower)
+		{
+			DEBUGLOG("LEFT RELEASED %d %d", buttons.ljoy_h, JoyLHPv);
+			events[1].type = ev_keyup;
+			events[1].data1 = KEY_MOVE_LEFT;
+			D_PostEvent(&events[1]);
+			JoyLHPv = buttons.ljoy_h;
+		}
+		 if (buttons.ljoy_h >= upper && JoyLHPv < upper)
+		{
+			DEBUGLOG("RIGHT PRESSED %d %d", buttons.ljoy_h, JoyLHPv);
+			events[1].type = ev_keydown;
+			events[1].data1 = KEY_MOVE_RIGHT;
+			D_PostEvent(&events[1]);
+			JoyLHPv = buttons.ljoy_h;
+		}
+		 if (buttons.ljoy_h < upper && JoyLHPv >= upper)
+		{
+			DEBUGLOG("RIGHT RELEASED %d %d", buttons.ljoy_h, JoyLHPv);
+			events[1].type = ev_keyup;
+			events[1].data1 = KEY_MOVE_RIGHT;
+			D_PostEvent(&events[1]);
+			JoyLHPv = buttons.ljoy_h;
+		}
+
+		if (buttons.ljoy_v <= lower && JoyLVPv > lower)
+		{
+			
+			DEBUGLOG("UP PRESSED %d %d", buttons.ljoy_v, JoyLVPv);
+			events[2].type = ev_keydown;
+			events[2].data1 = KEY_UPARROW;
+			D_PostEvent(&events[2]);
+			JoyLVPv = buttons.ljoy_v;
+		}
+		 if (buttons.ljoy_v > lower && JoyLVPv <= lower)
+		{
+			DEBUGLOG("UP RELEASED %d %d", buttons.ljoy_v, JoyLVPv);
+			events[2].type = ev_keyup;
+			events[2].data1 = KEY_UPARROW;
+			D_PostEvent(&events[2]);
+			JoyLVPv = buttons.ljoy_v;
+		}
+		if (buttons.ljoy_v >= upper && JoyLVPv < upper)
+		{
+			DEBUGLOG("DOWN PRESSED %d %d", buttons.ljoy_v, JoyLVPv);
+			events[2].type = ev_keydown;
+			events[2].data1 = KEY_DOWNARROW;
+			D_PostEvent(&events[2]);
+			JoyLVPv = buttons.ljoy_v;
+		}
+		if (buttons.ljoy_v < upper && JoyLVPv >= upper)
+		{
+			DEBUGLOG("DOWN RELEASED %d %d", buttons.ljoy_v, JoyLVPv);
+			events[2].type = ev_keyup;
+			events[2].data1 = KEY_DOWNARROW;
+			D_PostEvent(&events[2]);
+			JoyLVPv = buttons.ljoy_v;
+		}
+		
+		
+
+	//	DEBUGLOG("%d %d", buttons.ljoy_v, JoyLVPv);
+	//	DEBUGLOG("%d %d", buttons.ljoy_h, JoyLHPv);
+	//	DEBUGLOG("%d %d", buttons.rjoy_h, JoyRHPv);
+
+
+		int padType = 0x0001;
+		for (int i = 0; padType != 0; i++)
+		{
+			if (new_pad & padType)
+			{
+				events[3].type = ev_keydown;
+				events[3].data1 = events_id[i];
+				D_PostEvent(&events[3]);
+				
+			}
+			// release
+			if (!(currData & padType) && (old_pad & padType))
+			{
+				events[3].type = ev_keyup;
+				events[3].data1 = events_id[i];
+				D_PostEvent(&events[3]);
+			}
+
+			padType <<= 1;
+		}
+
+
+		old_pad = currData;
 	
-      case XK_BackSpace:
-      case XK_Delete:	rc = KEY_BACKSPACE;	break;
-
-      case XK_Pause:	rc = KEY_PAUSE;		break;
-
-      case XK_KP_Equal:
-      case XK_equal:	rc = KEY_EQUALS;	break;
-
-      case XK_KP_Subtract:
-      case XK_minus:	rc = KEY_MINUS;		break;
-
-      case XK_Shift_L:
-      case XK_Shift_R:
-	rc = KEY_RSHIFT;
-	break;
-	
-      case XK_Control_L:
-      case XK_Control_R:
-	rc = KEY_RCTRL;
-	break;
-	
-      case XK_Alt_L:
-      case XK_Meta_L:
-      case XK_Alt_R:
-      case XK_Meta_R:
-	rc = KEY_RALT;
-	break;
-	
-      default:
-	if (rc >= XK_space && rc <= XK_asciitilde)
-	    rc = rc - XK_space + ' ';
-	if (rc >= 'A' && rc <= 'Z')
-	    rc = rc - 'A' + 'a';
-	break;
-    }
-	*/
-
-	rc = 0;
-
-    return rc;
-
+	}
 }
-
-void I_ShutdownGraphics(void)
-{
-  // Detach from X server
- /* if (!XShmDetach(X_display, &X_shminfo))
-	    I_Error("XShmDetach() failed in I_ShutdownGraphics()");
-
-  // Release shared memory.
-  shmdt(X_shminfo.shmaddr);
-  shmctl(X_shminfo.shmid, IPC_RMID, 0);
-*/
-  // Paranoia.
- // image->data = NULL;
-}
-
-
 
 //
 // I_StartFrame
 //
-void I_StartFrame (void)
+void I_StartFrame(void)
 {
-    // er?
-
+	// er?
+}
+void I_ShutdownGraphics(void)
+{
 }
 
-static int	lastmousex = 0;
-static int	lastmousey = 0;
-boolean		mousemoved = false;
-boolean		shmFinished;
-
-void I_GetEvent(void)
-{
-
-    event_t event;
-
-    // put event-grabbing stuff in here
-    //XNextEvent(X_display, &X_event);
-	int i = 0;
-  /*  switch (i)
-    {
-      case KeyPress:
-	event.type = ev_keydown;
-	event.data1 = xlatekey();
-	D_PostEvent(&event);
-	// fprintf(stderr, "k");
-	break;
-      case KeyRelease:
-	event.type = ev_keyup;
-	event.data1 = xlatekey();
-	D_PostEvent(&event);
-	// fprintf(stderr, "ku");
-	break;
-      case ButtonPress:
-	event.type = ev_mouse;
-	event.data1 =
-	    (X_event.xbutton.state & Button1Mask)
-	    | (X_event.xbutton.state & Button2Mask ? 2 : 0)
-	    | (X_event.xbutton.state & Button3Mask ? 4 : 0)
-	    | (X_event.xbutton.button == Button1)
-	    | (X_event.xbutton.button == Button2 ? 2 : 0)
-	    | (X_event.xbutton.button == Button3 ? 4 : 0);
-	event.data2 = event.data3 = 0;
-	D_PostEvent(&event);
-	// fprintf(stderr, "b");
-	break;
-      case ButtonRelease:
-	event.type = ev_mouse;
-	event.data1 =
-	    (X_event.xbutton.state & Button1Mask)
-	    | (X_event.xbutton.state & Button2Mask ? 2 : 0)
-	    | (X_event.xbutton.state & Button3Mask ? 4 : 0);
-	// suggest parentheses around arithmetic in operand of |
-	event.data1 =
-	    event.data1
-	    ^ (X_event.xbutton.button == Button1 ? 1 : 0)
-	    ^ (X_event.xbutton.button == Button2 ? 2 : 0)
-	    ^ (X_event.xbutton.button == Button3 ? 4 : 0);
-	event.data2 = event.data3 = 0;
-	D_PostEvent(&event);
-	// fprintf(stderr, "bu");
-	break;
-      case MotionNotify:
-	event.type = ev_mouse;
-	event.data1 =
-	    (X_event.xmotion.state & Button1Mask)
-	    | (X_event.xmotion.state & Button2Mask ? 2 : 0)
-	    | (X_event.xmotion.state & Button3Mask ? 4 : 0);
-	event.data2 = (X_event.xmotion.x - lastmousex) << 2;
-	event.data3 = (lastmousey - X_event.xmotion.y) << 2;
-
-	if (event.data2 || event.data3)
-	{
-	    lastmousex = X_event.xmotion.x;
-	    lastmousey = X_event.xmotion.y;
-	    if (X_event.xmotion.x != X_width/2 &&
-		X_event.xmotion.y != X_height/2)
-	    {
-		D_PostEvent(&event);
-		// fprintf(stderr, "m");
-		mousemoved = false;
-	    } else
-	    {
-		mousemoved = true;
-	    }
-	}
-	break;
-	
-      case Expose:
-      case ConfigureNotify:
-	break;
-	
-      default:
-	if (doShm && X_event.type == X_shmeventtype) shmFinished = true;
-	break;
-    }
-*/
-}
-
-void*
-createnullcursor
-( void*	display,
-  void*	root )
-{
-    void *cursormask;
-    void* xgc;
-    void* gc;
-    void* dummycolour;
-    void* cursor;
-
-    //cursormask = XCreatePixmap(display, root, 1, 1, 1/*depth*/);
-    //xgc.function = GXclear;
-    //gc =  XCreateGC(display, cursormask, GCFunction, &xgc);
-    //XFillRectangle(display, cursormask, gc, 0, 0, 1, 1);
-    //dummycolour.pixel = 0;
-    //dummycolour.red = 0;
-    //dummycolour.flags = 04;
-    //cursor = XCreatePixmapCursor(display, cursormask, cursormask,
-	//			 &dummycolour,&dummycolour, 0,0);
-    //XFreePixmap(display,cursormask);
-    //XFreeGC(display,gc);
-    return cursor;
-}
-
-//
 // I_StartTic
 //
-void I_StartTic (void)
+void I_StartTic(void)
 {
-
-    if (!X_display)
-	return;
-
-    //while (XPending(X_display))
-	I_GetEvent();
-
-    // Warp the pointer back to the middle of the window
-    //  or it will wander off - that is, the game will
-    //  loose input focus within X11.
-    if (grabMouse)
-    {
-	if (!--doPointerWarp)
-	{
-	  /*  XWarpPointer( X_display,
-			  None,
-			  X_mainWindow,
-			  0, 0,
-			  0, 0,
-			  X_width/2, X_height/2);
-	*/
-	    doPointerWarp = POINTER_WARP_COUNTDOWN;
-	}
-    }
-
-    mousemoved = false;
-
+	UpdatePad();
 }
-
 
 //
 // I_UpdateNoBlit
 //
-void I_UpdateNoBlit (void)
+void I_UpdateNoBlit(void)
 {
-    // what is this?
+	// what is this?
 }
-
+static Color colors[256];
 //
 // I_FinishUpdate
 //
-void I_FinishUpdate (void)
+void I_FinishUpdate(void)
 {
 
-    static int	lasttic;
-    int		tics;
-    int		i;
-    // UNUSED static unsigned char *bigscreen=0;
-
-    // draws little dots on the bottom of the screen
-    if (devparm)
-    {
-
-	i = I_GetTime();
-	tics = i - lasttic;
-	lasttic = i;
-	if (tics > 20) tics = 20;
-
-	for (i=0 ; i<tics*2 ; i+=2)
-	    screens[0][ (SCREENHEIGHT-1)*SCREENWIDTH + i] = 0xff;
-	for ( ; i<20*2 ; i+=2)
-	    screens[0][ (SCREENHEIGHT-1)*SCREENWIDTH + i] = 0x0;
-    
-    }
-
-    // scales the screen size before blitting it
-    if (multiply == 2)
-    {
-	unsigned int *olineptrs[2];
-	unsigned int *ilineptr;
-	int x, y, i;
-	unsigned int twoopixels;
-	unsigned int twomoreopixels;
-	unsigned int fouripixels;
-
-	ilineptr = (unsigned int *) (screens[0]);
-	//for (i=0 ; i<2 ; i++)
-	   // olineptrs[i] = (unsigned int *) &image->data[i*X_width];
-
-	y = SCREENHEIGHT;
-	while (y--)
+	byte *in = screens[0];
+	for (int i = 0; i < SCREENHEIGHT * SCREENWIDTH; i++)
 	{
-	    x = SCREENWIDTH;
-	    do
-	    {
-		fouripixels = *ilineptr++;
-		twoopixels =	(fouripixels & 0xff000000)
-		    |	((fouripixels>>8) & 0xffff00)
-		    |	((fouripixels>>16) & 0xff);
-		twomoreopixels =	((fouripixels<<16) & 0xff000000)
-		    |	((fouripixels<<8) & 0xffff00)
-		    |	(fouripixels & 0xff);
-#ifdef __BIG_ENDIAN__
-		*olineptrs[0]++ = twoopixels;
-		*olineptrs[1]++ = twoopixels;
-		*olineptrs[0]++ = twomoreopixels;
-		*olineptrs[1]++ = twomoreopixels;
-#else
-		*olineptrs[0]++ = twomoreopixels;
-		*olineptrs[1]++ = twomoreopixels;
-		*olineptrs[0]++ = twoopixels;
-		*olineptrs[1]++ = twoopixels;
-#endif
-	    } while (x-=4);
-	    olineptrs[0] += X_width/4;
-	    olineptrs[1] += X_width/4;
+		int inNow = in[i];
+		int index = i * 4;
+		image->pixels[index + 0] = colors[inNow].r;
+		image->pixels[index + 1] = colors[inNow].g;
+		image->pixels[index + 2] = colors[inNow].b;
 	}
 
-    }
-    else if (multiply == 3)
-    {
-	unsigned int *olineptrs[3];
-	unsigned int *ilineptr;
-	int x, y, i;
-	unsigned int fouropixels[3];
-	unsigned int fouripixels;
+	timeend = getTicks(g_Manager.timer);
 
-	ilineptr = (unsigned int *) (screens[0]);
-	for (i=0 ; i<3 ; i++)
-	 //   olineptrs[i] = (unsigned int *) &image->data[i*X_width];
-
-	y = SCREENHEIGHT;
-	while (y--)
+	if (timeend - timestart > 16)
 	{
-	    x = SCREENWIDTH;
-	    do
-	    {
-		fouripixels = *ilineptr++;
-		fouropixels[0] = (fouripixels & 0xff000000)
-		    |	((fouripixels>>8) & 0xff0000)
-		    |	((fouripixels>>16) & 0xffff);
-		fouropixels[1] = ((fouripixels<<8) & 0xff000000)
-		    |	(fouripixels & 0xffff00)
-		    |	((fouripixels>>8) & 0xff);
-		fouropixels[2] = ((fouripixels<<16) & 0xffff0000)
-		    |	((fouripixels<<8) & 0xff00)
-		    |	(fouripixels & 0xff);
-#ifdef __BIG_ENDIAN__
-		*olineptrs[0]++ = fouropixels[0];
-		*olineptrs[1]++ = fouropixels[0];
-		*olineptrs[2]++ = fouropixels[0];
-		*olineptrs[0]++ = fouropixels[1];
-		*olineptrs[1]++ = fouropixels[1];
-		*olineptrs[2]++ = fouropixels[1];
-		*olineptrs[0]++ = fouropixels[2];
-		*olineptrs[1]++ = fouropixels[2];
-		*olineptrs[2]++ = fouropixels[2];
-#else
-		*olineptrs[0]++ = fouropixels[2];
-		*olineptrs[1]++ = fouropixels[2];
-		*olineptrs[2]++ = fouropixels[2];
-		*olineptrs[0]++ = fouropixels[1];
-		*olineptrs[1]++ = fouropixels[1];
-		*olineptrs[2]++ = fouropixels[1];
-		*olineptrs[0]++ = fouropixels[0];
-		*olineptrs[1]++ = fouropixels[0];
-		*olineptrs[2]++ = fouropixels[0];
-#endif
-	    } while (x-=4);
-	    olineptrs[0] += 2*X_width/4;
-	    olineptrs[1] += 2*X_width/4;
-	    olineptrs[2] += 2*X_width/4;
+		ClearScreen(g_Manager.targetBack, g_Manager.gs_context, 0x00, 0xFF, 0x00, 0x00);
+		DrawQuad(SKYDOOM_HEIGHT_HALF, SKYDOOM_WIDTH_HALF);
+		EndFrame();
+		timestart = timeend;
 	}
-
-    }
-    else if (multiply == 4)
-    {
-	// Broken. Gotta fix this some day.
-	//void Expand4(unsigned *, double *);
-  	//Expand4 ((unsigned *)(screens[0]), );
-    }
-
-   
-
-
-
 }
-
 
 //
 // I_ReadScreen
 //
-void I_ReadScreen (byte* scr)
+void I_ReadScreen(byte *scr)
 {
-    memcpy (scr, screens[0], SCREENWIDTH*SCREENHEIGHT);
+	memcpy(scr, screens[0], SCREENWIDTH * SCREENHEIGHT);
 }
-
 
 //
 // Palette stuff.
 //
-static Color colors[256];
 
-void UploadNewPalette(void *cmap, byte *palette)
+void UploadNewPalette(byte *palette)
 {
 
-    register int	i;
-    register int	c;
-    static boolean	firstcall = true;
-
-#ifdef __cplusplus
-  //  if (X_visualinfo.c_class == PseudoColor && X_visualinfo.depth == 8)
-#else
-   // if (X_visualinfo.class == PseudoColor && X_visualinfo.depth == 8)
-#endif
-	if (1)
-	{
-	    // initialize the colormap
-	    if (firstcall)
-	    {
-		firstcall = false;
-		for (i=0 ; i<256 ; i++)
-		{
-	//	    colors[i].pixel = i;
-	//	    colors[i].flags = DoRed|DoGreen|DoBlue;
-		}
-	    }
-
-	    // set the X colormap entries
-	    for (i=0 ; i<256 ; i++)
-	    {
-		c = gammatable[usegamma][*palette++];
-		//colors[i].red = (c<<8) + c;
-		c = gammatable[usegamma][*palette++];
-		//colors[i].green = (c<<8) + c;
-		c = gammatable[usegamma][*palette++];
-		//colors[i].blue = (c<<8) + c;
-	    }
-
-	    // store the colors to the current colormap
-	  //  XStoreColors(X_display, cmap, colors, 256);
-
-	}
+	
 }
 
 //
 // I_SetPalette
 //
-void I_SetPalette (byte* palette)
+void I_SetPalette(byte *palette)
 {
-    UploadNewPalette(X_cmap, palette);
+	int i;
+
+	// set the X colormap entries
+
+	byte *clut_palette = palette;
+
+	for (i = 0; i < 256; i++)
+	{
+		/*
+		DEBUGLOG("%d %d %d", gammatable[usegamma][*clut_palette], 
+		gammatable[usegamma][*clut_palette+1], gammatable[usegamma][*clut_palette+2]);
+		*/
+		int c = gammatable[usegamma][*clut_palette++];
+		colors[i].r = c;
+		c = gammatable[usegamma][*clut_palette++];
+		colors[i].g = c;
+		c = gammatable[usegamma][*clut_palette++];
+		colors[i].b = c;
+
+	}
 }
 
-
-//
-// This function is probably redundant,
-//  if XShmDetach works properly.
-// ddt never detached the XShm memory,
-//  thus there might have been stale
-//  handles accumulating.
-//
-void grabsharedmemory(int size)
+void DrawQuad(int height, int width)
 {
-/*
-  int			key = ('d'<<24) | ('o'<<16) | ('o'<<8) | 'm';
-  //struct shmid_ds	shminfo;
-  int			minsize = 320*200;
-  int			id;
-  int			rc;
-  // UNUSED int done=0;
-  int			pollution=5;
-  
-  // try to use what was here before
-  do
-  {
-    //d = shmget((key_t) key, minsize, 0777); // just get the id
-    if (id != -1)
-    {
-    //  rc=shmctl(id, IPC_STAT, &shminfo); // get stats on it
-      
-	
-	} else
-	{
-	  if (1)
-	  {
-	//    rc = shmctl(id, IPC_RMID, 0);
-	    if (!rc)
-	      fprintf(stderr,
-		      "Was able to kill my old shared memory\n");
-	    else
-	      I_Error("Was NOT able to kill my old shared memory");
-	    
-	  //  id = shmget((key_t)key, size, IPC_CREAT|0777);
-	    if (id==-1)
-	      I_Error("Could not get shared memory");
-	    
-	    //rc=shmctl(id, IPC_STAT, &shminfo);
-	    
-	
-	    
-	  }
-	  if (size >= 0)
-	  {
-	    fprintf(stderr,
-		    "will use %d's stale shared memory\n",
-		    0);
-	  }
-	  else
-	  {
-	    fprintf(stderr,
-		    "warning: can't use stale "
-		    "shared memory belonging to id %d, "
-		    "key=0x%x\n",
-		    0, key);
-	    key++;
-	  }
-    
-	
-      //id = shmget((key_t)key, size, IPC_CREAT|0777);
-      if (id==-1)
-      {
-	int errno;
-	fprintf(stderr, "errno=%d\n", errno);
-	I_Error("Could not get any shared memory");
-      }
-      break;
-    }
-  } while (--pollution);
-  
-  if (!pollution)
-  {
-    I_Error("Sorry, system too polluted with stale "
-	    "shared memory segments.\n");
-    }	
-  
-  //X_shminfo.shmid = id;
-  
-  // attach to the shared memory segment
-  //image->data = X_shminfo.shmaddr = shmat(id, 0, 0);
-  
-  fprintf(stderr, "shared memory id=%d, addr=0x%x\n", id,0);
-  */
+	UploadTextureToVRAM(image);
+	qword_t *ret = InitializeDMAObject();
+
+	// u64 reglist = ((u64)DRAW_UV_REGLIST) << 8 | DRAW_UV_REGLIST;
+
+	qword_t *dcode_tag_vif1 = ret;
+	ret++;
+
+	u8 red, green, blue, alpha;
+
+	red = green = blue = 0xFF;
+
+	alpha = 0x80;
+
+	ret = CreateDMATag(ret, DMA_CNT, 3, 0, 0, 0);
+
+	ret = CreateDirectTag(ret, 2, 0);
+
+	ret = CreateGSSetTag(ret, 1, 1, GIF_FLG_PACKED, 1, GIF_REG_AD);
+
+	ret = SetupZTestGS(ret, 1, 0, 0x80, ATEST_METHOD_NOTEQUAL, ATEST_KEEP_FRAMEBUFFER, 0, 0, g_Manager.gs_context);
+
+	qword_t *dmatag = ret;
+	ret++;
+	qword_t *direct = ret;
+
+	ret++;
+	PACK_GIFTAG(ret, GIF_SET_TAG(1, 1, 0, 0, GIF_FLG_PACKED, 1), GIF_REG_AD);
+	ret++;
+
+	PACK_GIFTAG(ret, GS_SET_PRIM(PRIM_TRIANGLE_STRIP, PRIM_SHADE_GOURAUD, DRAW_ENABLE, DRAW_DISABLE, DRAW_DISABLE, DRAW_DISABLE, PRIM_MAP_UV, g_Manager.gs_context, PRIM_UNFIXED), GS_REG_PRIM);
+	ret++;
+
+	u32 regCount = 3;
+
+	u64 regFlag = ((u64)GIF_REG_RGBAQ) << 0 | ((u64)GIF_REG_UV) << 4 | ((u64)GIF_REG_XYZ2) << 8;
+
+	PACK_GIFTAG(ret, GIF_SET_TAG(4, 1, 0, 0, GIF_FLG_REGLIST, regCount), regFlag);
+	ret++;
+
+	int u0 = 0;
+	int v0 = 0;
+
+	int u1 = ((image->width) << 4);
+	int v1 = ((image->height) << 4);
+
+	PACK_GIFTAG(ret, GIF_SET_RGBAQ(red, green, blue, alpha, 1), GIF_SET_UV(u0, v0));
+	ret++;
+
+	PACK_GIFTAG(ret, GIF_SET_XYZ(CreateGSScreenCoordinates(width, -), CreateGSScreenCoordinates(height, -), 0xFFFFFF), GIF_SET_RGBAQ(red, green, blue, alpha, 1));
+	ret++;
+	PACK_GIFTAG(ret, GIF_SET_UV(u0, v1), GIF_SET_XYZ(CreateGSScreenCoordinates(width, -), CreateGSScreenCoordinates(height, +), 0xFFFFFF));
+	ret++;
+	PACK_GIFTAG(ret, GIF_SET_RGBAQ(red, green, blue, alpha, 1), GIF_SET_UV(u1, v0));
+
+	ret++;
+	PACK_GIFTAG(ret, GIF_SET_XYZ(CreateGSScreenCoordinates(width, +), CreateGSScreenCoordinates(height, -), 0xFFFFFF), GIF_SET_RGBAQ(red, green, blue, alpha, 1));
+	ret++;
+	PACK_GIFTAG(ret, GIF_SET_UV(u1, v1), GIF_SET_XYZ(CreateGSScreenCoordinates(width, +), CreateGSScreenCoordinates(height, +), 0xFFFFFF));
+
+	ret++;
+
+	CreateDMATag(dmatag, DMA_END, ret - dmatag - 1, 0, 0, 0);
+
+	CreateDirectTag(direct, ret - direct - 1, 1);
+
+	u32 sizeOfPipeline = ret - dcode_tag_vif1 - 1;
+
+	CreateDCODEDmaTransferTag(dcode_tag_vif1, DMA_CHANNEL_VIF1, 0, 1, sizeOfPipeline);
+
+	CreateDCODETag(ret, DMA_DCODE_END);
+
+	SubmitDMABuffersAsPipeline(ret, NULL);
 }
 
 void I_InitGraphics(void)
 {
-/*
-    char*		displayname;
-    char*		d;
-    int			n;
-    int			pnum;
-    int			x=0;
-    int			y=0;
-    
-    // warning: char format, different type arg
-    char		xsign=' ';
-    char		ysign=' ';
-    
-    int			oktodraw;
-    unsigned long	attribmask;
-   // XSetWindowAttributes attribs;
-    //XGCValues		xgcvalues;
-    int			valuemask;
-    static int		firsttime=1;
+	SKYDOOM_HEIGHT_HALF = SKYDOOM_HEIGHT >> 1;
+	SKYDOOM_WIDTH_HALF = SKYDOOM_WIDTH >> 1;
 
-    if (!firsttime)
-	return;
-    firsttime = 0;
+	image = (Texture *)malloc(sizeof(Texture));
 
-    //signal(SIGINT, (void (*)(int)) I_Quit);
+	image->width = SCREENWIDTH;
+	image->height = SCREENHEIGHT;
+	image->psm = GS_PSM_32;
 
-    if (M_CheckParm("-2"))
-	multiply = 2;
+	InitTextureResources(image, 0);
 
-    if (M_CheckParm("-3"))
-	multiply = 3;
+	image->lod.mag_filter = LOD_MAG_LINEAR;
+	image->lod.min_filter = LOD_MIN_LINEAR;
 
-    if (M_CheckParm("-4"))
-	multiply = 4;
+	image->lod.l = 0;
+	image->lod.k = 0.0f;
+	image->lod.calculation = LOD_USE_K;
+	image->lod.max_level = 0;
 
-    X_width = SCREENWIDTH * multiply;
-    X_height = SCREENHEIGHT * multiply;
+	image->pixels = (u8 *)malloc(320 * 240 * 4);
 
-    // check for command-line display name
-    if ( (pnum=M_CheckParm("-disp")) ) // suggest parentheses around assignment
-	displayname = myargv[pnum+1];
-    else
-	displayname = 0;
+	AddToManagerTexList(&g_Manager, image);
 
-    // check if the user wants to grab the mouse (quite unnice)
-    grabMouse = !!M_CheckParm("-grabmouse");
-
-    // check for command-line geometry
-    if ( (pnum=M_CheckParm("-geom")) ) // suggest parentheses around assignment
-    {
-	// warning: char format, different type arg 3,5
-	n = sscanf(myargv[pnum+1], "%c%d%c%d", &xsign, &x, &ysign, &y);
-	
-	if (n==2)
-	    x = y = 0;
-	else if (n==6)
-	{
-	    if (xsign == '-')
-		x = -x;
-	    if (ysign == '-')
-		y = -y;
-	}
-	else
-	    I_Error("bad -geom parameter");
-    }
-
-    // open the display
-    //X_display = XOpenDisplay(displayname);
-    if (!X_display)
-    {
-	if (displayname)
-	    I_Error("Could not open display [%s]", displayname);
-	else
-	    I_Error("Could not open display (DISPLAY=[%s])", getenv("DISPLAY"));
-    }
-
-    // use the default visual 
-    //X_screen = DefaultScreen(X_display);
-    //if (!XMatchVisualInfo(X_display, X_screen, 8, PseudoColor, &X_visualinfo))
-	I_Error("xdoom currently only supports 256-color PseudoColor screens");
-    //X_visual = X_visualinfo.visual;
-
-    // check for the MITSHM extension
-    //doShm = XShmQueryExtension(X_display);
-
-    // even if it's available, make sure it's a local connection
-    if (doShm)
-    {
-	if (!displayname) displayname = (char *) getenv("DISPLAY");
-	if (displayname)
-	{
-	    d = displayname;
-	    while (*d && (*d != ':')) d++;
-	    if (*d) *d = 0;
-	    if (!(!strcasecmp(displayname, "unix") || !*displayname)) doShm = false;
-	}
-    }
-
-    fprintf(stderr, "Using MITSHM extension\n");
-
-    // create the colormap
-    //_cmap = XCreateColormap(X_display, RootWindow(X_display,
-	//					   X_screen), X_visual, AllocAll);
-
-    // setup attributes for main window
-   // attribmask = CWEventMask | CWColormap | CWBorderPixel;
-    //attribs.event_mask =
-	//KeyPressMask
-	//| KeyReleaseMask
-	// | PointerMotionMask | ButtonPressMask | ButtonReleaseMask
-	//| ExposureMask;
-
-    //attribs.colormap = X_cmap;
-    //attribs.border_pixel = 0;
-
-    // create the main window
-    //X_mainWindow = XCreateWindow(	X_display,
-	//				RootWindow(X_display, X_screen),
-	//				x, y,
-	//				X_width, X_height,
-	//				0, // borderwidth
-	//				8, // depth
-	//				InputOutput,
-	//				X_visual,
-	//				attribmask,
-	//				&attribs );
-
-    //XDefineCursor(X_display, X_mainWindow,
-	//	  createnullcursor( X_display, X_mainWindow ) );
-
-    // create the GC
-    //valuemask = GCGraphicsExposures;
-    //xgcvalues.graphics_exposures = False;
-    //X_gc = XCreateGC(	X_display,
-  	//		X_mainWindow,
-  	//		valuemask,
-  	//		&xgcvalues );
-
-    // map the window
-    //XMapWindow(X_display, X_mainWindow);
-
-    // wait until it is OK to draw
-    oktodraw = 0;
-    while (1)
-    {
-	//XNextEvent(X_display, &X_event);
-//	if (X_event.type == Expose
-///	    && !X_event.xexpose.count)
-	//{
-	  //  oktodraw = 1;
-	}
-    //}
-
-    // grabs the pointer so it is restricted to this window
-    if (grabMouse)
-	//XGrabPointer(X_display, X_mainWindow, True,
-	//	     ButtonPressMask|ButtonReleaseMask|PointerMotionMask,
-	//	     GrabModeAsync, GrabModeAsync,
-	//	     X_mainWindow, None, CurrentTime);
-
-    if (doShm)
-    {
-
-	//X_shmeventtype = XShmGetEventBase(X_display) + ShmCompletion;
-
-	// create the image
-	//image = XShmCreateImage(	X_display,
-	//				X_visual,
-	//				8,
-	//				ZPixmap,
-	//				0,
-	//				&X_shminfo,
-	//				X_width,
-	//				X_height );
-
-	//grabsharedmemory(image->bytes_per_line * image->height);
-
-
-	// UNUSED
-	// create the shared memory segment
-	// X_shminfo.shmid = shmget (IPC_PRIVATE,
-	// image->bytes_per_line * image->height, IPC_CREAT | 0777);
-	// if (X_shminfo.shmid < 0)
-	// {
-	// perror("");
-	// I_Error("shmget() failed in InitGraphics()");
-	// }
-	// fprintf(stderr, "shared memory id=%d\n", X_shminfo.shmid);
-	// attach to the shared memory segment
-	// image->data = X_shminfo.shmaddr = shmat(X_shminfo.shmid, 0, 0);
-	
-
-	if (!1)
-	{
-	    perror("");
-	    I_Error("shmat() failed in InitGraphics()");
-	}
-
-	// get the X server to attach to it
-	
-    if (multiply == 1) {
-	//screens[0] = (unsigned char *) (image->data);
-	 } else {
-	screens[0] = (unsigned char *) malloc (SCREENWIDTH * SCREENHEIGHT);
-	 }
-*/
+	timestart = timeend = getTicks(g_Manager.timer);
 }
-
-
-unsigned	exptable[256];
-
-void InitExpand (void)
-{
-    int		i;
-	
-    for (i=0 ; i<256 ; i++)
-	exptable[i] = i | (i<<8) | (i<<16) | (i<<24);
-}
-
-double		exptable2[256*256];
-
-void InitExpand2 (void)
-{
-    int		i;
-    int		j;
-    // UNUSED unsigned	iexp, jexp;
-    double*	exp;
-    union
-    {
-	double 		d;
-	unsigned	u[2];
-    } pixel;
-	
-    printf ("building exptable2...\n");
-    exp = exptable2;
-    for (i=0 ; i<256 ; i++)
-    {
-	pixel.u[0] = i | (i<<8) | (i<<16) | (i<<24);
-	for (j=0 ; j<256 ; j++)
-	{
-	    pixel.u[1] = j | (j<<8) | (j<<16) | (j<<24);
-	    *exp++ = pixel.d;
-	}
-    }
-    printf ("done.\n");
-}
-
-int	inited;
-
-void
-Expand4
-( unsigned*	lineptr,
-  double*	xline )
-{
-    double	dpixel;
-    unsigned	x;
-    unsigned 	y;
-    unsigned	fourpixels;
-    unsigned	step;
-    double*	exp;
-	
-    exp = exptable2;
-    if (!inited)
-    {
-	inited = 1;
-	InitExpand2 ();
-    }
-		
-		
-    step = 3*SCREENWIDTH/2;
-	
-    y = SCREENHEIGHT-1;
-    do
-    {
-	x = SCREENWIDTH;
-
-	do
-	{
-	    fourpixels = lineptr[0];
-			
-	    dpixel = *(double *)( (int)exp + ( (fourpixels&0xffff0000)>>13) );
-	    xline[0] = dpixel;
-	    xline[160] = dpixel;
-	    xline[320] = dpixel;
-	    xline[480] = dpixel;
-			
-	    dpixel = *(double *)( (int)exp + ( (fourpixels&0xffff)<<3 ) );
-	    xline[1] = dpixel;
-	    xline[161] = dpixel;
-	    xline[321] = dpixel;
-	    xline[481] = dpixel;
-
-	    fourpixels = lineptr[1];
-			
-	    dpixel = *(double *)( (int)exp + ( (fourpixels&0xffff0000)>>13) );
-	    xline[2] = dpixel;
-	    xline[162] = dpixel;
-	    xline[322] = dpixel;
-	    xline[482] = dpixel;
-			
-	    dpixel = *(double *)( (int)exp + ( (fourpixels&0xffff)<<3 ) );
-	    xline[3] = dpixel;
-	    xline[163] = dpixel;
-	    xline[323] = dpixel;
-	    xline[483] = dpixel;
-
-	    fourpixels = lineptr[2];
-			
-	    dpixel = *(double *)( (int)exp + ( (fourpixels&0xffff0000)>>13) );
-	    xline[4] = dpixel;
-	    xline[164] = dpixel;
-	    xline[324] = dpixel;
-	    xline[484] = dpixel;
-			
-	    dpixel = *(double *)( (int)exp + ( (fourpixels&0xffff)<<3 ) );
-	    xline[5] = dpixel;
-	    xline[165] = dpixel;
-	    xline[325] = dpixel;
-	    xline[485] = dpixel;
-
-	    fourpixels = lineptr[3];
-			
-	    dpixel = *(double *)( (int)exp + ( (fourpixels&0xffff0000)>>13) );
-	    xline[6] = dpixel;
-	    xline[166] = dpixel;
-	    xline[326] = dpixel;
-	    xline[486] = dpixel;
-			
-	    dpixel = *(double *)( (int)exp + ( (fourpixels&0xffff)<<3 ) );
-	    xline[7] = dpixel;
-	    xline[167] = dpixel;
-	    xline[327] = dpixel;
-	    xline[487] = dpixel;
-
-	    lineptr+=4;
-	    xline+=8;
-	} while (x-=16);
-	xline += step;
-    } while (y--);
-}
-
-

@@ -354,7 +354,7 @@ P_FindNextHighestFloor
 	// Check for overflow. Exit.
 	if ( h >= MAX_ADJOINING_SECTORS )
 	{
-	    fprintf( stderr,
+	    printf(
 		     "Sector with more than 20 adjoining sectors\n" );
 	    break;
 	}
@@ -1148,7 +1148,7 @@ void P_UpdateSpecials (void)
 			buttonlist[i].btexture;
 		    break;
 		}
-		S_StartSound((mobj_t *)&buttonlist[i].soundorg,sfx_swtchn);
+		//S_StartSound((mobj_t *)&buttonlist[i].soundorg,sfx_swtchn);
 		memset(&buttonlist[i],0,sizeof(button_t));
 	    }
 	}

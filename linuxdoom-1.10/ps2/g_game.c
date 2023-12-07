@@ -69,7 +69,7 @@ rcsid[] = "$Id: g_game.c,v 1.8 1997/02/03 22:45:09 b1 Exp $";
 
 
 #include "g_game.h"
-
+#include "log/ps_log.h"
 
 #define SAVEGAMESIZE	0x2c000
 #define SAVESTRINGSIZE	24
@@ -152,11 +152,16 @@ int		key_up;
 int		key_down; 
 int             key_strafeleft;
 int		key_straferight; 
+int  key_forward;
+int  key_back;
+int  key_lookright;
+int  key_lookleft;
 int             key_fire;
 int		key_use;
 int		key_strafe;
 int		key_speed; 
- 
+int    key_weaponwheelr;
+int    key_weaponwheell;
 int             mousebfire; 
 int             mousebstrafe; 
 int             mousebforward; 
@@ -165,8 +170,8 @@ int             joybfire;
 int             joybstrafe; 
 int             joybuse; 
 int             joybspeed; 
- 
- 
+
+extern int lookSensitivity;
  
 #define MAXPLMOVE		(forwardmove[1]) 
  
@@ -214,7 +219,7 @@ int		bodyqueslot;
  
 void*		statcopy;				// for statistics driver
  
- 
+extern boolean messageNeedsInput;
  
 int G_CmdChecksum (ticcmd_t* cmd) 
 { 
@@ -225,7 +230,35 @@ int G_CmdChecksum (ticcmd_t* cmd)
 	sum += ((int *)cmd)[i]; 
 		 
     return sum; 
-} 
+}
+
+int G_PlayerGetNextWeapon(int shift)
+{
+    player_t *player = &players[consoleplayer];
+	boolean shotgunhack = player->weaponowned[wp_supershotgun] && !player->weaponowned[wp_shotgun];
+    int currWeapon; 
+    if (player->readyweapon ==  wp_supershotgun)
+        currWeapon = wp_shotgun;
+    else 
+        currWeapon = player->readyweapon;
+    
+
+	int comp =  (currWeapon+shift) & 0x7;
+
+	while (comp!=currWeapon)
+	{
+		if (currWeapon == wp_chainsaw && comp == wp_fist)
+            comp = wp_pistol;
+        	
+        if  (player->weaponowned[comp] || 
+            (shotgunhack && comp == wp_shotgun)) 
+            break;
+		
+		comp = (comp+shift) & 0x7;
+	}
+
+	return comp;
+}
  
 
 //
@@ -234,6 +267,7 @@ int G_CmdChecksum (ticcmd_t* cmd)
 // or reads it from the demo buffer. 
 // If recording a demo, write it out 
 // 
+#include "log/ps_log.h"
 void G_BuildTiccmd (ticcmd_t* cmd) 
 { 
     int		i; 
@@ -273,18 +307,18 @@ void G_BuildTiccmd (ticcmd_t* cmd)
 	tspeed = 2;             // slow turn 
     else 
 	tspeed = speed;
-    
+    ////("%d", strafe);
     // let movement keys cancel each other out
     if (strafe) 
     { 
 	if (gamekeydown[key_right]) 
 	{
-	    // fprintf(stderr, "strafe right\n");
+	    // print("strafe right\n");
 	    side += sidemove[speed]; 
 	}
 	if (gamekeydown[key_left]) 
 	{
-	    //	fprintf(stderr, "strafe left\n");
+	    //	print("strafe left\n");
 	    side -= sidemove[speed]; 
 	}
 	if (joyxmove > 0) 
@@ -295,33 +329,34 @@ void G_BuildTiccmd (ticcmd_t* cmd)
     } 
     else 
     { 
-	if (gamekeydown[key_right]) 
-	    cmd->angleturn -= angleturn[tspeed]; 
-	if (gamekeydown[key_left]) 
-	    cmd->angleturn += angleturn[tspeed]; 
-	if (joyxmove > 0) 
-	    cmd->angleturn -= angleturn[tspeed]; 
-	if (joyxmove < 0) 
-	    cmd->angleturn += angleturn[tspeed]; 
+   // //("Hello???");
+	if ( gamekeydown[key_lookright]) { 
+	    cmd->angleturn -= (angleturn[tspeed] * ((lookSensitivity >> 1) + 1));
+    } 
+	if ( gamekeydown[key_lookleft]) 
+	    cmd->angleturn += (angleturn[tspeed] * ((lookSensitivity >> 1) + 1)) ; 
+	 
     } 
  
-    if (gamekeydown[key_up]) 
+    if (gamekeydown[key_up] || gamekeydown[key_forward]) 
     {
-	// fprintf(stderr, "up\n");
+	// print("up\n");
+   // //("Here!!!");
 	forward += forwardmove[speed]; 
     }
-    if (gamekeydown[key_down]) 
+    if (gamekeydown[key_down]||gamekeydown[key_back]) 
     {
-	// fprintf(stderr, "down\n");
+	// print("down\n");
 	forward -= forwardmove[speed]; 
+    ////("Here!");
     }
     if (joyymove < 0) 
 	forward += forwardmove[speed]; 
     if (joyymove > 0) 
 	forward -= forwardmove[speed]; 
-    if (gamekeydown[key_straferight]) 
+    if ( gamekeydown[key_right]|| gamekeydown[key_straferight]) 
 	side += sidemove[speed]; 
-    if (gamekeydown[key_strafeleft]) 
+    if (gamekeydown[key_left] || gamekeydown[key_strafeleft]) 
 	side -= sidemove[speed];
     
     // buttons
@@ -331,19 +366,29 @@ void G_BuildTiccmd (ticcmd_t* cmd)
 	|| joybuttons[joybfire]) 
 	cmd->buttons |= BT_ATTACK; 
  
+    //("COme on %d %d", key_use, gamekeydown[key_use]);
     if (gamekeydown[key_use] || joybuttons[joybuse] ) 
     { 
+        //("HElp");
 	cmd->buttons |= BT_USE;
 	// clear double clicks if hit use button 
 	dclicks = 0;                   
     } 
-
+    if (gamekeydown[key_weaponwheelr])
+    {
+        gamekeydown['1'+G_PlayerGetNextWeapon(1)] = true;  
+    } 
+    else if (gamekeydown[key_weaponwheell])
+    {
+        gamekeydown['1'+G_PlayerGetNextWeapon(-1)] = true; 
+    }
     // chainsaw overrides 
     for (i=0 ; i<NUMWEAPONS-1 ; i++)        
 	if (gamekeydown['1'+i]) 
 	{ 
 	    cmd->buttons |= BT_CHANGE; 
 	    cmd->buttons |= i<<BT_WEAPONSHIFT; 
+        gamekeydown['1'+i] = false;
 	    break; 
 	}
     
@@ -425,8 +470,9 @@ void G_BuildTiccmd (ticcmd_t* cmd)
     // special buttons
     if (sendpause) 
     { 
-	sendpause = false; 
-	cmd->buttons = BT_SPECIAL | BTS_PAUSE; 
+	    sendpause = false; 
+        if (!messageNeedsInput)
+	        cmd->buttons = BT_SPECIAL | BTS_PAUSE; 
     } 
  
     if (sendsave) 
@@ -576,8 +622,8 @@ boolean G_Responder (event_t* ev)
 	mousebuttons[0] = ev->data1 & 1; 
 	mousebuttons[1] = ev->data1 & 2; 
 	mousebuttons[2] = ev->data1 & 4; 
-	mousex = ev->data2*(mouseSensitivity+5)/10; 
-	mousey = ev->data3*(mouseSensitivity+5)/10; 
+	mousex = ev->data2*(lookSensitivity+5)/10; 
+	mousey = ev->data3*(lookSensitivity+5)/10; 
 	return true;    // eat events 
  
       case ev_joystick: 
@@ -602,6 +648,7 @@ boolean G_Responder (event_t* ev)
 // G_Ticker
 // Make ticcmd_ts for the players.
 //
+#include "log/ps_log.h"
 void G_Ticker (void) 
 { 
     int		i;
@@ -703,12 +750,19 @@ void G_Ticker (void)
 	    { 
 		switch (players[i].cmd.buttons & BT_SPECIALMASK) 
 		{ 
-		  case BTS_PAUSE: 
+		  case BTS_PAUSE:
+            
 		    paused ^= 1; 
-		    if (paused) 
-			S_PauseSound (); 
-		    else 
-			S_ResumeSound (); 
+		    //if (paused) 
+			//S_PauseSound (); 
+		    //else 
+			//S_ResumeSound ();
+            if (paused)
+            {
+                M_StartControlPanel ();
+            } else {
+                M_ClearMenus();
+            }
 		    break; 
 					 
 		  case BTS_SAVEGAME: 
@@ -882,8 +936,8 @@ G_CheckSpot
 		      , ss->sector->floorheight 
 		      , MT_TFOG); 
 	 
-    if (players[consoleplayer].viewz != 1) 
-	S_StartSound (mo, sfx_telept);	// don't start sound on first frame 
+   // if (players[consoleplayer].viewz != 1) 
+	//S_StartSound (mo, sfx_telept);	// don't start sound on first frame 
  
     return true; 
 } 
@@ -1372,7 +1426,7 @@ G_InitNew
     if (paused) 
     { 
 	paused = false; 
-	S_ResumeSound (); 
+	//S_ResumeSound (); 
     } 
 	
 
@@ -1578,7 +1632,7 @@ void G_DeferedPlayDemo (char* name)
     defdemoname = name; 
     gameaction = ga_playdemo; 
 } 
- 
+ #include "log/ps_log.h"
 void G_DoPlayDemo (void) 
 { 
     skill_t skill; 
@@ -1586,13 +1640,14 @@ void G_DoPlayDemo (void)
 	 
     gameaction = ga_nothing; 
     demobuffer = demo_p = W_CacheLumpName (defdemoname, PU_STATIC); 
+    //////////////("%x %s", demo_p, defdemoname);
     if ( *demo_p++ != VERSION)
     {
-      fprintf( stderr, "Demo is from a different game version!\n");
-      gameaction = ga_nothing;
-      return;
+      printf("Demo is from a different game version!\n");
+     // gameaction = ga_nothing;
+      //return;
     }
-    
+    //DEBUGLOG("HERfdsfsfdsfE!!!");
     skill = *demo_p++; 
     episode = *demo_p++; 
     map = *demo_p++; 

@@ -571,10 +571,12 @@ void R_RenderBSPNode (int bspnum)
 
     // Recursively divide front space.
     R_RenderBSPNode (bsp->children[side]); 
-
+    //////////("ANYHOW");
     // Possibly divide back space.
-    if (R_CheckBBox (bsp->bbox[side^1]))	
-	R_RenderBSPNode (bsp->children[side^1]);
+    if (R_CheckBBox (bsp->bbox[side^1])) {	
+        //////////("HERE %d %d", side^1, bsp->children[side^1]);
+	    R_RenderBSPNode (bsp->children[side^1]);
+    }
 }
 
 

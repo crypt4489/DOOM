@@ -26,6 +26,8 @@
 //
 // CHEAT SEQUENCE PACKAGE
 //
+#include "doomtype.h"
+
 
 #define SCRAMBLE(a) \
 ((((a)&1)<<7) + (((a)&2)<<5) + ((a)&4) + (((a)&8)<<1) \
@@ -49,7 +51,12 @@ cht_GetParam
 ( cheatseq_t*		cht,
   char*			buffer );
 
+boolean 
+cht_compareCheat(cheatseq_t *cheat, 
+                    char *string);
 
+void cht_GetParamString(char *string,
+                        char *buffer);
 #endif
 //-----------------------------------------------------------------------------
 //

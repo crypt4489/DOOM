@@ -53,7 +53,7 @@ void ST_Start (void);
 // Called by startup code.
 void ST_Init (void);
 
-
+boolean ST_checkCheat(char *stringinput);
 
 // States for status bar code.
 typedef enum

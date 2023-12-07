@@ -167,7 +167,7 @@ wipe_initMelt
 
     return 0;
 }
-
+#include "log/ps_log.h"
 int
 wipe_doMelt
 ( int	width,
@@ -244,7 +244,7 @@ wipe_StartScreen
     I_ReadScreen(wipe_scr_start);
     return 0;
 }
-
+#include "log/ps_log.h"
 int
 wipe_EndScreen
 ( int	x,
@@ -257,7 +257,7 @@ wipe_EndScreen
     V_DrawBlock(x, y, 0, width, height, wipe_scr_start); // restore start scr.
     return 0;
 }
-
+#include "log/ps_log.h"
 int
 wipe_ScreenWipe
 ( int	wipeno,

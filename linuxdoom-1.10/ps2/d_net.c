@@ -33,7 +33,7 @@ static const char rcsid[] = "$Id: d_net.c,v 1.3 1997/02/03 22:01:47 b1 Exp $";
 #include "g_game.h"
 #include "doomdef.h"
 #include "doomstat.h"
-
+#include "log/ps_log.h"
 #define	NCMD_EXIT		0x80000000
 #define	NCMD_RETRANSMIT		0x40000000
 #define	NCMD_SETUP		0x20000000
@@ -632,7 +632,7 @@ int	frameskip[4];
 int	oldnettics;
 
 extern	boolean	advancedemo;
-
+#include "log/ps_log.h"
 void TryRunTics (void)
 {
     int		i;
@@ -651,7 +651,7 @@ void TryRunTics (void)
     
     // get available tics
     NetUpdate ();
-	
+	////////("Here in the loop part2");	
     lowtic = MAXINT;
     numplaying = 0;
     for (i=0 ; i<doomcom->numnodes ; i++)

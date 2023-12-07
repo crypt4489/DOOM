@@ -85,18 +85,12 @@ byte* I_ZoneBase (int*	size)
 // I_GetTime
 // returns time in 1/70th second tics
 //
+#include "system/ps_timer.h"
+#include "log/ps_log.h"
 int  I_GetTime (void)
 {
-    struct timeval	tp;
-    struct timezone	tzp;
-    int			newtics;
-    static int		basetime=0;
-  
-    gettimeofday(&tp, &tzp);
-    if (!basetime)
-	basetime = tp.tv_sec;
-    newtics = (tp.tv_sec-basetime)*TICRATE + tp.tv_usec*TICRATE/1000000;
-    return newtics;
+    u64 newtime = getTimeMs(g_Manager.timer);
+    return  newtime*TICRATE / 1000;
 }
 
 
@@ -165,12 +159,10 @@ void I_Error (char *error, ...)
 
     // Message first.
     va_start (argptr,error);
-    fprintf (stderr, "Error: ");
-    vfprintf (stderr,error,argptr);
-    fprintf (stderr, "\n");
+    printf ("Error: ");
+    printf (error,argptr);
+    printf ("\n");
     va_end (argptr);
-
-    fflush( stderr );
 
     // Shutdown. Here might be other errors.
     if (demorecording)
