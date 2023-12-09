@@ -48,7 +48,7 @@ update_win:
 	cp $(ISO_TGT) $(WIN_DIR)
 
 disc:
-	mkisofs -l -o $(ISO_TGT) $(TARGET_DIR)/$(EE_BIN) SYSTEM.CNF $(IRX_DIR) doom1.wad doom2.wad
+	mkisofs -l -o $(ISO_TGT) $(TARGET_DIR)/$(EE_BIN) SYSTEM.CNF $(IRX_DIR) doom1.wad doom2.wad background.png DefaultFont.bmp DefaultFontData.dat
 
 irx:
 	mv $(IOP_MOD) "$(IRX_DIR)"

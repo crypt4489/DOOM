@@ -73,6 +73,8 @@ static const char rcsid[] = "$Id: d_main.c,v 1.8 1997/02/03 22:45:09 b1 Exp $";
 #include "p_setup.h"
 #include "r_local.h"
 
+#include "m_launcher.h"
+
 
 #include "d_main.h"
 #include "log/ps_log.h"
@@ -87,6 +89,15 @@ static const char rcsid[] = "$Id: d_main.c,v 1.8 1997/02/03 22:45:09 b1 Exp $";
 //  calls all ?_Responder, ?_Ticker, and ?_Drawer,
 //  calls I_GetTime, I_StartFrame, and I_StartTic
 //
+
+//from m_launcher
+extern GameMode_t *gamemodes;
+extern char **wadlist;
+extern u32 wadlistsize;
+
+char mainwad[25];
+
+
 void D_DoomLoop (void);
 
 
@@ -697,7 +708,7 @@ void IdentifyVersion (void)
 	D_AddFile (doom2fwad);
 	return;
     }
-		char doom2wad1path[25]; 
+	char doom2wad1path[25]; 
 	Pathify(doom2wad, doom2wad1path);
     if (FileExist(doom2wad1path) )
     {
@@ -749,6 +760,122 @@ void IdentifyVersion (void)
     // We don't abort. Let's see what the PWAD contains.
     //exit(1);
     //I_Error ("Game mode indeterminate\n");
+}
+
+void IdentifyVersionLauncher(void)
+{
+
+	char *doom1wad;
+	char *doomwad;
+	char *doomuwad;
+	char *doom2wad;
+
+	char *doom2fwad;
+	char *plutoniawad;
+	char *tntwad;
+
+	char *home;
+	char *doomwaddir = "";
+
+	// Commercial.
+	doom2wad = malloc(9 + 1);
+	memcpy(doom2wad, "doom2.wad", 9);
+	doom2wad[9] = '\0';
+
+	// Retail.
+	doomuwad = malloc(8 + 1);
+	memcpy(doomuwad, "doomu.wad", 8);
+	doomuwad[8] = '\0';
+
+	// Registered.
+	doomwad = malloc(8 + 1);
+	memcpy(doomwad, "doom.wad", 8);
+	doomwad[8] = '\0';
+
+	// Shareware.
+	doom1wad = malloc(9 + 1);
+	memcpy(doom1wad, "doom1.wad", 9);
+	doom1wad[9] = '\0';
+
+	// Bug, dear Shawn.
+	// Insufficient malloc, caused spurious realloc errors.
+	plutoniawad = malloc(12 + 1);
+	memcpy(plutoniawad, "plutonia.wad", 12);
+	plutoniawad[12] = '\0';
+
+	tntwad = malloc(7 + 1);
+	memcpy(tntwad, "tnt.wad", 7);
+	tntwad[7] = '\0';
+
+	// French stuff.
+	doom2fwad = malloc(10 + 1);
+	memcpy(doom2fwad, "doom2f.wad", 10);
+	doom2fwad[10] = '\0';
+
+	char doompath[25];
+
+	Pathify(doom2fwad, doompath);
+
+	if (FileExist(doompath))
+	{
+		gamemodes[wadlistsize] = commercial;
+		wadlist[wadlistsize] = doom2fwad;
+		wadlistsize++;
+	}
+
+	Pathify(doom2wad, doompath);
+
+	if (FileExist(doompath))
+	{
+		gamemodes[wadlistsize] = commercial;
+		wadlist[wadlistsize] = doom2wad;
+		wadlistsize++;
+	}
+
+	Pathify(plutoniawad, doompath);
+
+	if (FileExist(doompath))
+	{
+		gamemodes[wadlistsize] = commercial;
+		wadlist[wadlistsize] = plutoniawad;
+		wadlistsize++;
+	}
+
+	Pathify(tntwad, doompath);
+
+	if (FileExist(doompath))
+	{
+		gamemodes[wadlistsize] = commercial;
+		wadlist[wadlistsize] = tntwad;
+		wadlistsize++;
+	}
+
+	Pathify(doomuwad, doompath);
+
+	if (FileExist(doompath))
+	{
+		gamemodes[wadlistsize] = retail;
+		wadlist[wadlistsize] = doomuwad;
+		wadlistsize++;
+	}
+
+	Pathify(doomwad, doompath);
+
+	if (FileExist(doompath))
+	{
+		gamemodes[wadlistsize] = registered;
+		wadlist[wadlistsize] = doomwad;
+		wadlistsize++;
+	}
+
+	Pathify(doom1wad, doompath);
+
+	if (FileExist(doompath))
+	{
+		gamemodes[wadlistsize] = shareware;
+		wadlist[wadlistsize] = doom1wad;
+		wadlistsize++;
+	}
 }
 
 //
@@ -833,9 +960,19 @@ void D_DoomMain (void)
     int             p;
     char                    file[256];
 
-    FindResponseFile ();
+	M_LauncherInit();
+
+	IdentifyVersionLauncher();
+
+	M_LauncherRun();
+
+	M_LauncherDeinit();
+
+	D_AddFile(mainwad);
+
+   // FindResponseFile ();
 	
-    IdentifyVersion ();
+   // IdentifyVersion ();
 	
     setbuf (stdout, NULL);
     modifiedgame = false;

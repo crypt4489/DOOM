@@ -25,7 +25,7 @@
 
 
 #include "doomtype.h"
-
+#include "ps_global.h"
 #ifdef __GNUG__
 #pragma interface
 #endif
@@ -53,7 +53,7 @@ void I_ReadScreen (byte* scr);
 void I_BeginRead (void);
 void I_EndRead (void);
 
-
+void DrawFullScreenQuad(int height, int width, Texture* _image);
 
 #endif
 //-----------------------------------------------------------------------------

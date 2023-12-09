@@ -40,6 +40,7 @@ static const char
 #include "d_main.h"
 #include "z_zone.h"
 #include "doomdef.h"
+#include "i_video.h"
 // #include <draw2d.h>
 // #include <draw3d.h>
 #include <draw_primitives.h>
@@ -77,7 +78,7 @@ u32 SKYDOOM_WIDTH_HALF;
 Texture *image;
 
 float timestart, timeend;
-void DrawQuad(int height, int width);
+
 extern u32 port;
 extern u32 slot;
 extern char padBuf[256];
@@ -296,7 +297,7 @@ void I_FinishUpdate(void)
 	if (timeend - timestart > 16)
 	{
 		ClearScreen(g_Manager.targetBack, g_Manager.gs_context, 0x00, 0xFF, 0x00, 0x00);
-		DrawQuad(SKYDOOM_HEIGHT_HALF, SKYDOOM_WIDTH_HALF);
+		DrawFullScreenQuad(SKYDOOM_HEIGHT_HALF, SKYDOOM_WIDTH_HALF, image);
 		EndFrame();
 		timestart = timeend;
 	}
@@ -347,9 +348,9 @@ void I_SetPalette(byte *palette)
 	}
 }
 
-void DrawQuad(int height, int width)
+void DrawFullScreenQuad(int height, int width, Texture *_image)
 {
-	UploadTextureToVRAM(image);
+	UploadTextureToVRAM(_image);
 	qword_t *ret = InitializeDMAObject();
 
 	// u64 reglist = ((u64)DRAW_UV_REGLIST) << 8 | DRAW_UV_REGLIST;
@@ -392,8 +393,8 @@ void DrawQuad(int height, int width)
 	int u0 = 0;
 	int v0 = 0;
 
-	int u1 = ((image->width) << 4);
-	int v1 = ((image->height) << 4);
+	int u1 = ((_image->width) << 4);
+	int v1 = ((_image->height) << 4);
 
 	PACK_GIFTAG(ret, GIF_SET_RGBAQ(red, green, blue, alpha, 1), GIF_SET_UV(u0, v0));
 	ret++;
