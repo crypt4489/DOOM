@@ -24,11 +24,10 @@ Font *fontimage = NULL;
 
 u32 wadlistsize = 0;
 u32 wadselect = 0;
-u32 halfw = 0, halfh = 0;
 
-char **wadlist;
+char **wadlist = NULL;
 
-GameMode_t *gamemodes;
+GameMode_t *gamemodes = NULL;
 
 extern GameMode_t gamemode;
 extern char mainwad[25];
@@ -36,10 +35,8 @@ extern char mainwad[25];
 //pad stuff
 extern u32 port;
 extern u32 slot;
-extern char padBuf[256];
 static u32 old_pad = 0;
-static u32 new_pad;
-static u32 currData;
+
 
 void M_LauncherInit(void)
 {
@@ -48,12 +45,10 @@ void M_LauncherInit(void)
     background = AddAndCreateTexture("BACKGROUND.PNG", READ_PNG, 0, 0, TEX_ADDRESS_CLAMP, 1);
 
     fontimage = CreateFontStruct("DEFAULTFONT.BMP", "DEFAULTFONTDATA.DAT", READ_BMP);
+
     fontimage->color.r = 0x00;
     fontimage->color.g = 0x00;
     fontimage->color.b = 0x00;
-
-    halfh = SKYDOOM_HEIGHT >> 1;
-    halfw = SKYDOOM_WIDTH >> 1;
 
     wadlist = malloc(sizeof(char *) * 10);
     gamemodes = (GameMode_t *)malloc(sizeof(GameMode_t) * 10);
@@ -63,7 +58,10 @@ static void UpdatePad()
 {
     struct padButtonStatus buttons;
 
-    s32 state = padGetState(port, 0);
+    u32 new_pad;
+    u32 currData;
+
+    s32 state = padGetState(port, slot);
 
     if (state == PAD_STATE_DISCONN)
     {
@@ -71,24 +69,22 @@ static void UpdatePad()
         return;
     }
 
-    state = padRead(port, 0, &buttons);
+    state = padRead(port, slot, &buttons);
 
     currData = 0xffff ^ buttons.btns;
 
     new_pad = currData & ~old_pad;
 
-    if (new_pad & PAD_DOWN)
+    if (new_pad & PAD_UP)
     {
-        //DEBUGLOG("%d %d", wadlistsize, wadselect);
         if (wadselect > 0)
         {
             wadselect--;
         }
     }
 
-    if (new_pad & PAD_UP)
+    if (new_pad & PAD_DOWN)
     {
-        //DEBUGLOG("%d %d", wadlistsize, wadselect);
         if (wadselect < wadlistsize - 1)
         {
             wadselect++;
@@ -98,7 +94,6 @@ static void UpdatePad()
     if (new_pad & PAD_CROSS)
     {
         runninglauncher = false;
-        //mainwad = wadlist[wadselect];
         memcpy(mainwad, wadlist[wadselect], strlen(wadlist[wadselect]));
         gamemode = gamemodes[wadselect];
     }
@@ -106,20 +101,25 @@ static void UpdatePad()
     old_pad = currData;
 }
 
-static void CopyWADAndUpper(char *output, char *input)
+static void UpperWAD(char *output, char *input)
 {
     int len = strlen(input);
+
     for (int i = 0; i < len; i++)
     {
         output[i] = toupper(input[i]);
     }
-    output[len + 1] = '\0';
 }
 
 void M_LauncherRun(void)
 {
     for (int i = 0; i<wadlistsize; i++)
-        CopyWADAndUpper(wadlist[i], wadlist[i]);
+        UpperWAD(wadlist[i], wadlist[i]);
+
+     
+    u32 halfh = SKYDOOM_HEIGHT >> 1;
+    u32 halfw = SKYDOOM_WIDTH >> 1;
+
     while (runninglauncher)
     {
         UpdatePad();
@@ -131,20 +131,25 @@ void M_LauncherRun(void)
 
     ClearScreen(g_Manager.targetBack, g_Manager.gs_context, 0, 0, 0, 255);
     EndFrame();
-
 }
 
 void M_LauncherDeinit(void)
 {
-    CleanFontStruct(fontimage);
-    CleanTextureStruct(background);
+    ClearManagerTexList(&g_Manager);
+   // CleanFontStruct(fontimage);
+    //CleanTextureStruct(background);
     //ClearManagerTexList(&g_Manager);
     background = NULL;
     fontimage = NULL;
+
     for (int i = 0; i<wadlistsize; i++)
     {
         free(wadlist[i]);
     }
+
     free(wadlist);
     free(gamemodes);
+
+    wadlist = NULL;
+    gamemodes = NULL;
 }

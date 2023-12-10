@@ -32,7 +32,7 @@ rcsid[] = "$Id: i_main.c,v 1.4 1997/02/03 22:45:10 b1 Exp $";
 #include "d_main.h"
 #include "gamemanager/ps_manager.h"
 #include "gs/ps_gs.h"
-
+#include "log/ps_log.h"
 
 
 u32 SKYDOOM_HEIGHT = 480;
@@ -44,7 +44,6 @@ main
 ( int		argc,
   char**	argv ) 
 { 
-
     InitializeSystem(0, SKYDOOM_WIDTH, SKYDOOM_HEIGHT, GS_PSM_24);
 
     myargc = argc; 

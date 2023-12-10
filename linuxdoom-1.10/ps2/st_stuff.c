@@ -1220,18 +1220,18 @@ void ST_drawWidgets(boolean refresh)
 
 	STlib_updateNum(&w_frags, refresh);
 }
-#include "log/ps_log.h"
+
 void ST_doRefresh(void)
 {
 
 	st_firsttime = false;
-	// DEBUGLOG("HEREERERER!");
+	
 	//  draw status bar background to off-screen buff
 	ST_refreshBackground();
-	// DEBUGLOG("HEREERERER!");
+	
 	//  and refresh all widgets
 	ST_drawWidgets(true);
-	// DEBUGLOG("HEREERERER!");
+	
 }
 
 void ST_diffDraw(void)
@@ -1245,23 +1245,21 @@ void ST_Drawer(boolean fullscreen, boolean refresh)
 
 	st_statusbaron = (!fullscreen) || automapactive;
 	st_firsttime = st_firsttime || refresh;
-	// DEBUGLOG("HEREERERER!");
+	
 	//  Do red-/gold-shifts from damage/items
 	ST_doPaletteStuff();
-	// DEBUGLOG("HEREERERER!");
+	
 	//  If just after ST_Start(), refresh all
-	// DEBUGLOG("HEREERERER!");
+	
 	if (st_firsttime)
 	{
 		ST_doRefresh();
 		// Otherwise, update as little as possible
-		// DEBUGLOG("HEREERERER!");
+		
 	}
 	else
 	{
 		ST_diffDraw();
-		//////////////("DONESKY");
-		// DEBUGLOG("HEREERERER!");
 	}
 }
 

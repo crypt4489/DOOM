@@ -235,23 +235,31 @@ int G_CmdChecksum (ticcmd_t* cmd)
 int G_PlayerGetNextWeapon(int shift)
 {
     player_t *player = &players[consoleplayer];
-	boolean shotgunhack = player->weaponowned[wp_supershotgun] && !player->weaponowned[wp_shotgun];
-    int currWeapon; 
-    if (player->readyweapon ==  wp_supershotgun)
-        currWeapon = wp_shotgun;
-    else 
-        currWeapon = player->readyweapon;
+	
+    boolean shotgunhack = player->weaponowned[wp_supershotgun] && !player->weaponowned[wp_shotgun];
+    boolean sharewareVersion = gamemode == shareware;
     
+    weapontype_t currWeapon = player->readyweapon; 
+    
+    // original does not map double barrel to keyboard, 
+    // so we use regular shotgun position
 
-	int comp =  (currWeapon+shift) & 0x7;
+    if (player->readyweapon ==  wp_supershotgun) 
+    {
+        currWeapon = wp_shotgun;
+    }
+
+	weapontype_t comp =  (currWeapon+shift) & 0x7;
 
 	while (comp!=currWeapon)
 	{
+        // if chainsaw is owned, then skip over fist and go to pistol
 		if (currWeapon == wp_chainsaw && comp == wp_fist)
             comp = wp_pistol;
-        	
-        if  (player->weaponowned[comp] || 
-            (shotgunhack && comp == wp_shotgun)) 
+
+        // need to account for only double barrel shotgun owned/shareware with no plasma or bfg	
+        if  ((player->weaponowned[comp] || (shotgunhack && comp == wp_shotgun)) 
+            && !(sharewareVersion && (comp == wp_plasma || comp == wp_bfg))) 
             break;
 		
 		comp = (comp+shift) & 0x7;
@@ -307,18 +315,16 @@ void G_BuildTiccmd (ticcmd_t* cmd)
 	tspeed = 2;             // slow turn 
     else 
 	tspeed = speed;
-    ////("%d", strafe);
+    
     // let movement keys cancel each other out
     if (strafe) 
     { 
 	if (gamekeydown[key_right]) 
 	{
-	    // print("strafe right\n");
 	    side += sidemove[speed]; 
 	}
 	if (gamekeydown[key_left]) 
 	{
-	    //	print("strafe left\n");
 	    side -= sidemove[speed]; 
 	}
 	if (joyxmove > 0) 
@@ -329,7 +335,6 @@ void G_BuildTiccmd (ticcmd_t* cmd)
     } 
     else 
     { 
-   // //("Hello???");
 	if ( gamekeydown[key_lookright]) { 
 	    cmd->angleturn -= (angleturn[tspeed] * ((lookSensitivity >> 1) + 1));
     } 
@@ -340,15 +345,13 @@ void G_BuildTiccmd (ticcmd_t* cmd)
  
     if (gamekeydown[key_up] || gamekeydown[key_forward]) 
     {
-	// print("up\n");
-   // //("Here!!!");
 	forward += forwardmove[speed]; 
     }
     if (gamekeydown[key_down]||gamekeydown[key_back]) 
     {
-	// print("down\n");
+	
 	forward -= forwardmove[speed]; 
-    ////("Here!");
+
     }
     if (joyymove < 0) 
 	forward += forwardmove[speed]; 
@@ -366,10 +369,10 @@ void G_BuildTiccmd (ticcmd_t* cmd)
 	|| joybuttons[joybfire]) 
 	cmd->buttons |= BT_ATTACK; 
  
-    //("COme on %d %d", key_use, gamekeydown[key_use]);
+    
     if (gamekeydown[key_use] || joybuttons[joybuse] ) 
     { 
-        //("HElp");
+        
 	cmd->buttons |= BT_USE;
 	// clear double clicks if hit use button 
 	dclicks = 0;                   
@@ -1640,14 +1643,14 @@ void G_DoPlayDemo (void)
 	 
     gameaction = ga_nothing; 
     demobuffer = demo_p = W_CacheLumpName (defdemoname, PU_STATIC); 
-    //////////////("%x %s", demo_p, defdemoname);
+
     if ( *demo_p++ != VERSION)
     {
       printf("Demo is from a different game version!\n");
      // gameaction = ga_nothing;
       //return;
     }
-    //DEBUGLOG("HERfdsfsfdsfE!!!");
+
     skill = *demo_p++; 
     episode = *demo_p++; 
     map = *demo_p++; 

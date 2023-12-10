@@ -992,6 +992,7 @@ void M_EndGameResponse(int ch)
 
     if (ch == KEY_ENTER)
     {
+        paused = false;
         currentMenu->lastOn = itemOn;
         M_ClearMenus();
         D_StartTitle();
@@ -1003,6 +1004,8 @@ void M_EndGameResponse(int ch)
         M_ClearMenus();
         sendpause = true;
     }
+
+    
 }
 
 void M_EndGame(int choice)
@@ -1274,7 +1277,7 @@ void M_WriteText(int x,
             if (c == buttonMap[i].character)
             {
                 foundSpecialChar = true;
-                V_DrawPatchDirect(cx-6, cy-4, 0, W_CacheLumpName(buttonMap[i].buttonImage, 0));
+                V_DrawPatchDirect(cx-6, cy-3, 0, W_CacheLumpName(buttonMap[i].buttonImage, 0));
                 break;
             }
         }
@@ -1542,9 +1545,9 @@ boolean M_Responder(event_t *ev)
             return false;
 
         menuactive = messageLastMenuActive;
-        sendpause = true;
+        if (ch == KEY_ESCAPE || ch == KEY_BACKSPACE)
+            sendpause = true;
         messageToPrint = 0;
-        
         if (messageRoutine)
             messageRoutine(ch);
         messageNeedsInput = false;

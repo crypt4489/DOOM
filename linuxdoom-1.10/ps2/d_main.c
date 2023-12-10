@@ -955,11 +955,11 @@ void FindResponseFile (void)
 //
 // D_DoomMain
 //
+#include "log/ps_log.h"
 void D_DoomMain (void)
 {
     int             p;
     char                    file[256];
-
 	M_LauncherInit();
 
 	IdentifyVersionLauncher();
