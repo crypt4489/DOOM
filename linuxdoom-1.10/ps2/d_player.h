@@ -161,7 +161,8 @@ typedef struct player_s
     pspdef_t		psprites[NUMPSPRITES];
 
     // True if secret level has been done.
-    boolean		didsecret;	
+    boolean		didsecret;
+    boolean     foundsecretarea;
 
 } player_t;
 

@@ -144,7 +144,6 @@ extern  short	numlinespecials;
 extern  line_t*	linespeciallist[MAXLINEANIMS];
 
 
-
 void P_InitPicAnims (void)
 {
     int		i;
@@ -1049,6 +1048,7 @@ void P_PlayerInSpecialSector (player_t* player)
 	// SECRET SECTOR
 	player->secretcount++;
 	sector->special = 0;
+	player->foundsecretarea = true;
 	break;
 			
       case 11:

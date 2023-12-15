@@ -43,6 +43,13 @@
 
 #define HU_MSGTIMEOUT	(4*TICRATE)
 
+typedef struct button_char_map_t
+{
+    char character;
+    char *buttonImage;
+} ButtonCharMap;
+
+
 //
 // HEADS UP TEXT
 //
@@ -56,7 +63,7 @@ void HU_Ticker(void);
 void HU_Drawer(void);
 char HU_dequeueChatChar(void);
 void HU_Erase(void);
-
+void HU_WriteText(int x, int y, char *string);
 
 #endif
 //-----------------------------------------------------------------------------

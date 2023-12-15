@@ -87,6 +87,7 @@ char*	player_names[] =
 
 char			chat_char; // remove later.
 static player_t*	plr;
+static int secretmessagecounter = 90;
 patch_t*		hu_font[HU_FONTSIZE];
 static hu_textline_t	w_title;
 boolean			chat_on;
@@ -106,6 +107,9 @@ extern int		showMessages;
 extern boolean		automapactive;
 
 static boolean		headsupactive = false;
+
+extern ButtonCharMap buttonMap[4];
+
 
 //
 // Builtin map names.
@@ -408,7 +412,6 @@ void HU_Init(void)
 	sprintf(buffer, "STCFN%.3d", j++);
 	hu_font[i] = (patch_t *) W_CacheLumpName(buffer, PU_STATIC);
     }
-
 }
 
 void HU_Stop(void)
@@ -430,7 +433,7 @@ void HU_Start(void)
     message_dontfuckwithme = false;
     message_nottobefuckedwith = false;
     chat_on = false;
-
+    secretmessagecounter = 90;
     // create the message widget
     HUlib_initSText(&w_message,
 		    HU_MSGX, HU_MSGY, HU_MSGHEIGHT,
@@ -490,6 +493,8 @@ void HU_Drawer(void)
     HUlib_drawIText(&w_chat);
     if (automapactive)
 	HUlib_drawTextLine(&w_title, false);
+    if (plr->foundsecretarea && usergame)
+    HU_WriteText(85, 80, "A SECRET IS REVEALED!");
 
 }
 
@@ -573,6 +578,15 @@ void HU_Ticker(void)
 		players[i].cmd.chatchar = 0;
 	    }
 	}
+    }
+
+    if (plr->foundsecretarea)
+    {
+        if (--secretmessagecounter == 0)
+        {
+            plr->foundsecretarea = false;
+            secretmessagecounter = 90;
+        }
     }
 
 }
@@ -756,4 +770,58 @@ boolean HU_Responder(event_t *ev)
 
     return eatkey;
 
+}
+
+void HU_WriteText(int x,
+                 int y,
+                 char *string)
+{
+    int w;
+    char *ch;
+    int c;
+    int cx;
+    int cy;
+
+    ch = string;
+    cx = x;
+    cy = y;
+
+    while (1)
+    {
+        c = *ch++;
+        if (!c)
+            break;
+        if (c == '\n')
+        {
+            cx = x;
+            cy += 12;
+            continue;
+        }
+        boolean foundSpecialChar = false;
+        for (int i = 0; i<4; i++)
+        {
+            if (c == buttonMap[i].character)
+            {
+                foundSpecialChar = true;
+                V_DrawPatchDirect(cx-6, cy-3, 0, W_CacheLumpName(buttonMap[i].buttonImage, 0));
+                break;
+            }
+        }
+
+        if (foundSpecialChar == true)
+            continue;
+
+        c = toupper(c) - HU_FONTSTART;
+        if (c < 0 || c >= HU_FONTSIZE)
+        {
+            cx += 4;
+            continue;
+        }
+
+        w = SHORT(hu_font[c]->width);
+        if (cx + w > SCREENWIDTH)
+            break;
+        V_DrawPatchDirect(cx, cy, 0, hu_font[c]);
+        cx += w;
+    }
 }

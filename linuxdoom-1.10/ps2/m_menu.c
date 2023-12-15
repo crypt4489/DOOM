@@ -229,7 +229,6 @@ void M_SetupNextMenu(menu_t *menudef);
 void M_DrawThermo(int x, int y, int thermWidth, int thermDot);
 void M_DrawEmptyCell(menu_t *menu, int item);
 void M_DrawSelCell(menu_t *menu, int item);
-void M_WriteText(int x, int y, char *string);
 int M_StringWidth(char *string);
 int M_StringHeight(char *string);
 void M_StartControlPanel(void);
@@ -503,11 +502,7 @@ menu_t CheatDef =
         80, 54,
         0};
 
-typedef struct button_char_map_t
-{
-    char character;
-    char *buttonImage;
-} ButtonCharMap;
+
 
 ButtonCharMap buttonMap[4] = {
     {'$', "M_CROSS"},
@@ -558,7 +553,7 @@ void M_DrawLoad(void)
     for (i = 0; i < load_end; i++)
     {
         M_DrawSaveLoadBorder(LoadDef.x, LoadDef.y + LINEHEIGHT * i);
-        M_WriteText(LoadDef.x, LoadDef.y + LINEHEIGHT * i, savegamestrings[i]);
+        HU_WriteText(LoadDef.x, LoadDef.y + LINEHEIGHT * i, savegamestrings[i]);
     }
 }
 
@@ -622,10 +617,10 @@ void M_DrawSave(void)
     for (i = 0; i < load_end; i++)
     {
         M_DrawSaveLoadBorder(LoadDef.x, LoadDef.y + LINEHEIGHT * i);
-        M_WriteText(LoadDef.x, LoadDef.y + LINEHEIGHT * i, savegamestrings[i]);
+        HU_WriteText(LoadDef.x, LoadDef.y + LINEHEIGHT * i, savegamestrings[i]);
     }
 
-    M_WriteText(LoadDef.x, 150, "Press  \%  to accept and save");
+    HU_WriteText(LoadDef.x, 150, "Press  \%  to accept and save");
     //V_DrawPatchDirect(LoadDef.x + 39, 148, 0, W_CacheLumpName("M_CIRCLE", 0));
 
     if (saveStringEnter)
@@ -633,7 +628,7 @@ void M_DrawSave(void)
         if (blink > 15)
         {
             i = M_StringWidth(savegamestrings[saveSlot]);
-            M_WriteText(LoadDef.x + i, LoadDef.y + LINEHEIGHT * saveSlot, eligible[saveInputCharIndex]);
+            HU_WriteText(LoadDef.x + i, LoadDef.y + LINEHEIGHT * saveSlot, eligible[saveInputCharIndex]);
         }
     }
 
@@ -1246,7 +1241,8 @@ int M_StringHeight(char *string)
 //
 //      Write a string using the hu_font
 //
-void M_WriteText(int x,
+/*
+void HU_WriteText(int x,
                  int y,
                  char *string)
 {
@@ -1299,7 +1295,7 @@ void M_WriteText(int x,
         cx += w;
     }
 }
-
+*/
 static inline void convertCheatString()
 {
 	for (int i = 0; i<cheatCharIndex; i++)
@@ -1839,7 +1835,7 @@ void M_Drawer(void)
             }
 
             x = 160 - M_StringWidth(string) / 2;
-            M_WriteText(x, y, string);
+            HU_WriteText(x, y, string);
             y += SHORT(hu_font[0]->height);
         }
         return;
@@ -1899,7 +1895,7 @@ void M_Drawer(void)
 
     /* if (paused)
      {
-         M_WriteText(270,0,"Paused");
+         HU_WriteText(270,0,"Paused");
      }*/
 }
 
@@ -1991,16 +1987,16 @@ void M_DrawCheats(void)
     V_DrawPatchDirect(72, 28, 0, W_CacheLumpName("M_CHEATS", 0));
     
     M_DrawSaveLoadBorder(CheatDef.x, CheatDef.y);
-    M_WriteText(CheatDef.x, CheatDef.y, cheatgamestring);
+    HU_WriteText(CheatDef.x, CheatDef.y, cheatgamestring);
 
-    M_WriteText(CheatDef.x, 150, "Press  \%  to accept and save");
+    HU_WriteText(CheatDef.x, 150, "Press  \%  to enter");
 
     if (cheatStringEnter)
     {
         if (blink > 15)
         {
             i = M_StringWidth(cheatgamestring);
-            M_WriteText(CheatDef.x + i, CheatDef.y, eligible[cheatCharNewIndex]);
+            HU_WriteText(CheatDef.x + i, CheatDef.y, eligible[cheatCharNewIndex]);
         }
     }
 
