@@ -51,6 +51,7 @@ rcsid[] = "$Id: p_pspr.c,v 1.5 1997/02/03 22:45:12 b1 Exp $";
 // plasma cells for a bfg attack
 #define BFGCELLS		40		
 
+static int sawTimer = 6;
 
 //
 // P_SetPsprite
@@ -142,8 +143,8 @@ void P_BringUpWeapon (player_t* player)
     if (player->pendingweapon == wp_nochange)
 	player->pendingweapon = player->readyweapon;
 		
-    //if (player->pendingweapon == wp_chainsaw)
-	//S_StartSound (player->mo, sfx_sawup);
+    if (player->pendingweapon == wp_chainsaw)
+	S_StartSound (player->mo, sfx_sawup);
 		
     newstate = weaponinfo[player->pendingweapon].upstate;
 
@@ -293,11 +294,12 @@ A_WeaponReady
 	P_SetMobjState (player->mo, S_PLAY);
     }
     
-    //if (player->readyweapon == wp_chainsaw
-	//&& psp->state == &states[S_SAW])
-   // {
-	//S_StartSound (player->mo, sfx_sawidl);
-    //}
+    if (player->readyweapon == wp_chainsaw
+	&& psp->state == &states[S_SAW])
+    {
+	S_StartSound (player->mo, sfx_sawidl);
+    sawTimer = 6;
+    }
     
     // check for change
     //  if player is dead, put the weapon away
@@ -486,7 +488,7 @@ A_Punch
     // turn to face target
     if (linetarget)
     {
-	//S_StartSound (player->mo, sfx_punch);
+	S_StartSound (player->mo, sfx_punch);
 	player->mo->angle = R_PointToAngle2 (player->mo->x,
 					     player->mo->y,
 					     linetarget->x,
@@ -498,6 +500,8 @@ A_Punch
 //
 // A_Saw
 //
+
+
 void
 A_Saw
 ( player_t*	player,
@@ -514,13 +518,18 @@ A_Saw
     // use meleerange + 1 se the puff doesn't skip the flash
     slope = P_AimLineAttack (player->mo, angle, MELEERANGE+1);
     P_LineAttack (player->mo, angle, MELEERANGE+1, slope, damage);
-
+    sawTimer++;
     if (!linetarget)
     {
-	//S_StartSound (player->mo, sfx_sawful);
+    
+    if ((sawTimer & 0x7) == 0x7)
+	    S_StartSound (player->mo, sfx_sawful);
 	return;
     }
-    //S_StartSound (player->mo, sfx_sawhit);
+    if ((sawTimer & 0x7) == 0x7)
+    S_StartSound (player->mo, sfx_sawhit);
+
+    sawTimer = sawTimer % 0x7;
 	
     // turn to face target
     angle = R_PointToAngle2 (player->mo->x, player->mo->y,
@@ -648,7 +657,7 @@ A_FirePistol
 ( player_t*	player,
   pspdef_t*	psp ) 
 {
-    //S_StartSound (player->mo, sfx_pistol);
+    S_StartSound (player->mo, sfx_pistol);
 
     P_SetMobjState (player->mo, S_PLAY_ATK2);
     player->ammo[weaponinfo[player->readyweapon].ammo]--;
@@ -672,7 +681,7 @@ A_FireShotgun
 {
     int		i;
 	
-    //S_StartSound (player->mo, sfx_shotgn);
+    S_StartSound (player->mo, sfx_shotgn);
     P_SetMobjState (player->mo, S_PLAY_ATK2);
 
     player->ammo[weaponinfo[player->readyweapon].ammo]--;
@@ -702,7 +711,7 @@ A_FireShotgun2
     int		damage;
 		
 	
-    //S_StartSound (player->mo, sfx_dshtgn);
+    S_StartSound (player->mo, sfx_dshtgn);
     P_SetMobjState (player->mo, S_PLAY_ATK2);
 
     player->ammo[weaponinfo[player->readyweapon].ammo]-=2;
@@ -734,7 +743,7 @@ A_FireCGun
 ( player_t*	player,
   pspdef_t*	psp ) 
 {
-    //S_StartSound (player->mo, sfx_pistol);
+    S_StartSound (player->mo, sfx_pistol);
 
     if (!player->ammo[weaponinfo[player->readyweapon].ammo])
 	return;
@@ -819,7 +828,7 @@ A_BFGsound
 ( player_t*	player,
   pspdef_t*	psp )
 {
-    //S_StartSound (player->mo, sfx_bfg);
+    S_StartSound (player->mo, sfx_bfg);
 }
 
 

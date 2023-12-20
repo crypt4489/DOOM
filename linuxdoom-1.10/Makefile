@@ -16,7 +16,7 @@ EE_OBJS += $(patsubst $(SRC_DIR)/%, $(OBJS_DIR)/%, $(EE_SRC_C:.$(CEXT)=.$(OBJEXT
 
 EE_DVP = dvp-as
 
-EE_LIBS= -lps2  -ldma -lgraph -ldraw -lkernel -lpacket -lpad -lcdvd -lpng -lz -lunzip -laudsrv 
+EE_LIBS= -lps2 -ldma -lgraph -ldraw -lkernel -lpacket -lpad -lcdvd -lpng -lz -lunzip -laudsrv 
 
 PS2SDK=/usr/local/ps2dev/ps2sdk
 

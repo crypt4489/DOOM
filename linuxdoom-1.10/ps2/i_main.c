@@ -24,9 +24,11 @@
 static const char
 rcsid[] = "$Id: i_main.c,v 1.4 1997/02/03 22:45:10 b1 Exp $";
 
-
+#include <audsrv.h>
+#include <loadfile.h>
 
 #include "doomdef.h"
+#include "i_video.h"
 
 #include "m_argv.h"
 #include "d_main.h"
@@ -45,6 +47,21 @@ main
   char**	argv ) 
 { 
     InitializeSystem(0, SKYDOOM_WIDTH, SKYDOOM_HEIGHT, GS_PSM_24);
+    I_InitGraphics();
+    int ret;
+    printf("kicking IRXs\n");
+    ret = SifLoadModule("cdrom0:\\LIBSD.IRX", 0, NULL);
+    printf("libsd loadmodule %d\n", ret);
+
+    printf("loading audsrv\n");
+    ret = SifLoadModule("cdrom0:\\AUDSRV.IRX", 0, NULL);
+    printf("audsrv loadmodule %d\n", ret);
+
+    ret = audsrv_init();
+
+    audsrv_adpcm_init();
+
+    
 
     myargc = argc; 
     myargv = argv; 

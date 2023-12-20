@@ -401,8 +401,6 @@ void D_DoomLoop (void)
 	printf ("debug output to: %s\n",filename);
 	debugfile = fopen (filename,"w");
     }
-	
-    I_InitGraphics ();
 
     while (1)
     {
@@ -442,15 +440,7 @@ void D_DoomLoop (void)
 	
 	D_Display ();
 	
-#ifndef SNDSERV
-	// Sound mixing for the buffer is snychronous.
-	//I_UpdateSound();
-#endif	
-	// Synchronous sound output is explicitly called.
-#ifndef SNDINTR
-	// Update sound output.
-	//I_SubmitSound();
-#endif
+	I_UpdateSound();
 	
     }
 }
@@ -968,13 +958,14 @@ void D_DoomMain (void)
 
 	M_LauncherDeinit();
 
+	//I_InitGraphics();
+
 	D_AddFile(mainwad);
 
    // FindResponseFile ();
 	
    // IdentifyVersion ();
 	
-    setbuf (stdout, NULL);
     modifiedgame = false;
 	
     nomonsters = M_CheckParm ("-nomonsters");
@@ -1276,7 +1267,7 @@ void D_DoomMain (void)
     D_CheckNetGame ();
 
     printf ("S_Init: Setting up sound.\n");
-   // S_Init (snd_SfxVolume /* *8 */, snd_MusicVolume /* *8*/ );
+    S_Init (snd_SfxVolume /* *8 */, snd_MusicVolume /* *8*/ );
 
     printf ("HU_Init: Setting up heads up display.\n");
     HU_Init ();
@@ -1338,6 +1329,5 @@ void D_DoomMain (void)
 	    D_StartTitle ();                // start up intro loop
 
     }
-   //////////("HERE!!!");
     D_DoomLoop ();  // never returns
 }

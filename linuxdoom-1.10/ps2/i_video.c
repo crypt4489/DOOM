@@ -90,7 +90,7 @@ static u32 events_id[16] = {KEY_ESCAPE, KEY_SPEED, 0, KEY_PAUSE, KEY_UPARROW, KE
 static u8 JoyRHPv = 127;
 static u8 JoyLVPv = 127;
 static u8 JoyLHPv = 127;
-
+//static u8 framebuffer[320*240*4];
 static u32 lower = 50;
 static u32 upper = 200;
 void UpdatePad()
@@ -285,11 +285,11 @@ void I_FinishUpdate(void)
 	byte *in = screens[0];
 	for (int i = 0; i < SCREENHEIGHT * SCREENWIDTH; i++)
 	{
-		int inNow = in[i];
+		int inColor = in[i];
 		int index = i * 4;
-		image->pixels[index + 0] = colors[inNow].r;
-		image->pixels[index + 1] = colors[inNow].g;
-		image->pixels[index + 2] = colors[inNow].b;
+		image->pixels[index + 0] = colors[inColor].r;
+		image->pixels[index + 1] = colors[inColor].g;
+		image->pixels[index + 2] = colors[inColor].b;
 	}
 
 	timeend = getTicks(g_Manager.timer);
@@ -425,6 +425,8 @@ void DrawFullScreenQuad(int height, int width, Texture *_image)
 	SubmitDMABuffersAsPipeline(ret, NULL);
 }
 
+
+
 void I_InitGraphics(void)
 {
 	SKYDOOM_HEIGHT_HALF = SKYDOOM_HEIGHT >> 1;
@@ -448,7 +450,7 @@ void I_InitGraphics(void)
 
 	image->pixels = (u8 *)malloc(320 * 240 * 4);
 
-	AddToManagerTexList(&g_Manager, image);
+	//AddToManagerTexList(&g_Manager, image);
 
 	timestart = timeend = getTicks(g_Manager.timer);
 }

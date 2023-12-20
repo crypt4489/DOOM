@@ -164,7 +164,7 @@ void S_Init
 {  
   int		i;
 
-  fprintf( stderr, "S_Init: default sfx volume %d\n", sfxVolume);
+  printf("S_Init: default sfx volume %d\n", sfxVolume);
 
   // Whatever these did with DMX, these are rather dummies now.
   I_SetChannels();
@@ -348,11 +348,8 @@ S_StartSoundAtVolume
   // kill old sound
   S_StopSound(origin);
 
-  // try to find a channel
-  cnum = S_getChannel(origin, sfx);
+
   
-  if (cnum<0)
-    return;
 
   //
   // This is supposed to handle the loading/caching.
@@ -404,7 +401,7 @@ S_StartSound
     // sfx_id = sfx_itemup;
 #endif
   
-    //S_StartSoundAtVolume(origin, sfx_id, snd_SfxVolume);
+    S_StartSoundAtVolume(origin, sfx_id, snd_SfxVolume);
 
 
     // UNUSED. We had problems, had we not?

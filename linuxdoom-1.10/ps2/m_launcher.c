@@ -135,9 +135,9 @@ void M_LauncherRun(void)
 
 void M_LauncherDeinit(void)
 {
-    ClearManagerTexList(&g_Manager);
-   // CleanFontStruct(fontimage);
-    //CleanTextureStruct(background);
+    //ClearManagerTexList(&g_Manager);
+    CleanFontStruct(fontimage);
+    CleanTextureStruct(background);
     //ClearManagerTexList(&g_Manager);
     background = NULL;
     fontimage = NULL;
