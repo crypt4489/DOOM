@@ -33,7 +33,8 @@ static const char
 #include "z_zone.h"
 #include "m_random.h"
 #include "w_wad.h"
-
+#include "doomstat.h"
+#include "m_menu.h"
 #include "doomdef.h"
 
 #include "g_game.h"
@@ -760,7 +761,7 @@ boolean ST_checkCheat(char *stringinput)
 			int musnum;
 
 			plyr->message = STSTR_MUS;
-			cht_GetParamString(stringinput, buf);
+			cht_GetParamString(&cheat_mus, stringinput, buf);
 
 			if (gamemode == commercial)
 			{
@@ -831,19 +832,18 @@ boolean ST_checkCheat(char *stringinput)
 			plyr->message = buf;
 		}
 	}
-
+	
 	// 'clev' change-level cheat
 	if (cht_compareCheat(&cheat_clev, stringinput))
 	{
 		char buf[3];
 		int epsd;
 		int map;
-
-		cht_GetParamString(stringinput, buf);
-
+		cht_GetParamString(&cheat_clev, stringinput, buf);
+	
 		if (gamemode == commercial)
 		{
-			epsd = 0;
+			epsd = 1;
 			map = (buf[0] - '0') * 10 + buf[1] - '0';
 		}
 		else
@@ -851,7 +851,7 @@ boolean ST_checkCheat(char *stringinput)
 			epsd = buf[0] - '0';
 			map = buf[1] - '0';
 		}
-
+		
 		// Catch invalid maps.
 		if (epsd < 1)
 			return false;
@@ -875,6 +875,9 @@ boolean ST_checkCheat(char *stringinput)
 		// So be it.
 		plyr->message = STSTR_CLEV;
 		G_DeferedInitNew(gameskill, epsd, map);
+		M_ClearMenus();
+        S_StartSound(NULL, sfx_swtchx);
+        paused = false;
 	}
 }
 

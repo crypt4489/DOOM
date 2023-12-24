@@ -582,6 +582,11 @@ void HU_Ticker(void)
 
     if (plr->foundsecretarea)
     {
+        if (secretmessagecounter == 90)
+        {
+            S_StartSound(NULL, sfx_telept);
+        }
+        
         if (--secretmessagecounter == 0)
         {
             plr->foundsecretarea = false;

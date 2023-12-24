@@ -54,8 +54,6 @@ void M_Init (void);
 // does nothing if menu is already up.
 void M_StartControlPanel (void);
 
-
-
 void M_ClearMenus (void);
 
 

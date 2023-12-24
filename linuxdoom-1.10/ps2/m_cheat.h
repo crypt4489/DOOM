@@ -55,7 +55,8 @@ boolean
 cht_compareCheat(cheatseq_t *cheat, 
                     char *string);
 
-void cht_GetParamString(char *string,
+void cht_GetParamString(cheatseq_t *cheat, 
+                        char *string,
                         char *buffer);
 #endif
 //-----------------------------------------------------------------------------

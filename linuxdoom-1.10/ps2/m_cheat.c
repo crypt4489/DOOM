@@ -109,22 +109,27 @@ void cht_GetParam(cheatseq_t *cht,
         *buffer = 0;
 }
 
-void cht_GetParamString(char *string,
+void cht_GetParamString(cheatseq_t *cht, char *string,
                   char *buffer)
 {
 
-    char *p, c;
+    char *p, *cs, c;
 
     p = string;
-    while (*(p++) != 1)
-        ;
+    cs = cht->sequence;
+    while (*(cs++) != 1)
+    {
+        p++;
+    }
+        
 
     do
     {
         c = *p;
         *(buffer++) = c;
         *(p++) = 0;
-    } while (c && *p != 0xff);
+
+    } while (c && *(cs++) != 0xff);
 
     if (*p == 0xff)
         *buffer = 0;

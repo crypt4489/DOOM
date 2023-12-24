@@ -1299,6 +1299,7 @@ static inline void convertCheatString()
 
         cheatgamestring[i] = tolower(cheatgamestring[i]);
     }
+    cheatgamestring[cheatCharIndex] = '0';
 }
 
 //
@@ -1656,7 +1657,7 @@ boolean M_Responder(event_t *ev)
     }
 
     // Keys usable within menu
-    boolean skip = false;
+    
     switch (ch)
     {
     case KEY_DOWNARROW:
@@ -1667,10 +1668,10 @@ boolean M_Responder(event_t *ev)
                 itemOn = 0;
             else
                 itemOn++;
-            if (!skip)
+            if (currentMenu->menuitems[itemOn].status != -1)
                 S_StartSound(NULL, sfx_pstop);
 
-            skip = true;
+        
 
         } while (currentMenu->menuitems[itemOn].status == -1);
         return true;
@@ -1682,10 +1683,8 @@ boolean M_Responder(event_t *ev)
                 itemOn = currentMenu->numitems - 1;
             else
                 itemOn--;
-            if (!skip)
+           if (currentMenu->menuitems[itemOn].status != -1)
                 S_StartSound(NULL, sfx_pstop);
-
-            skip = true;
 
         } while (currentMenu->menuitems[itemOn].status == -1);
         return true;
