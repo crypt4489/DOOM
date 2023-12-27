@@ -246,7 +246,7 @@ int G_PlayerGetNextWeapon(int shift)
     while (comp != currWeapon)
     {
         // if chainsaw is owned, then skip over fist and go to pistol
-        if (currWeapon == wp_chainsaw && comp == wp_fist)
+        if (currWeapon == wp_chainsaw && comp == wp_fist && !player->powers[pw_strength])
             comp = wp_pistol;
 
         // need to account for only double barrel shotgun owned/shareware with no plasma or bfg
@@ -275,6 +275,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
     int tspeed;
     int forward;
     int side;
+    int jump;
 
     ticcmd_t *base;
 
@@ -287,7 +288,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
     strafe = gamekeydown[key_strafe] || mousebuttons[mousebstrafe] || joybuttons[joybstrafe];
     speed = gamekeydown[key_speed] || joybuttons[joybspeed];
 
-    forward = side = 0;
+    forward = side = jump = 0;
 
     // use two stage accelerative turning
     // on the keyboard and joystick
@@ -344,6 +345,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
         side += sidemove[speed];
     if (gamekeydown[key_left] || gamekeydown[key_strafeleft])
         side -= sidemove[speed];
+    
+    if (gamekeydown[KEY_BACKSPACE])    
+        cmd->upmove = 1;
 
     // buttons
     cmd->chatchar = HU_dequeueChatChar();
@@ -853,6 +857,8 @@ void G_PlayerReborn(int player)
 
     for (i = 0; i < NUMAMMO; i++)
         p->maxammo[i] = maxammo[i];
+
+    memset(&p->jump, 0, sizeof(Jumping));
 }
 
 //

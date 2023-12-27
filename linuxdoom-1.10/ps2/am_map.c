@@ -91,12 +91,14 @@ static const char rcsid[] = "$Id: am_map.c,v 1.4 1997/02/03 21:24:33 b1 Exp $";
 #define AM_PANUPKEY	KEY_UPARROW
 #define AM_PANRIGHTKEY	KEY_RIGHTARROW
 #define AM_PANLEFTKEY	KEY_LEFTARROW
-#define AM_ZOOMINKEY	'='
-#define AM_ZOOMOUTKEY	'-'
+#define AM_PANRIGHT1KEY	KEY_MOVE_RIGHT
+#define AM_PANLEFT1KEY	KEY_MOVE_LEFT
+#define AM_ZOOMINKEY	KEY_ENTER
+#define AM_ZOOMOUTKEY	KEY_SELECT
 #define AM_STARTKEY	KEY_TAB
 #define AM_ENDKEY	KEY_TAB
 #define AM_GOBIGKEY	'0'
-#define AM_FOLLOWKEY	'f'
+#define AM_FOLLOWKEY	KEY_BACKSPACE
 #define AM_GRIDKEY	'g'
 #define AM_MARKKEY	'm'
 #define AM_CLEARMARKKEY	'c'
@@ -282,7 +284,7 @@ static patch_t *marknums[10]; // numbers used for marking by the automap
 static mpoint_t markpoints[AM_NUMMARKPOINTS]; // where the points are
 static int markpointnum = 0; // next point to be assigned
 
-static int followplayer = 1; // specifies whether to follow the player around
+static int followplayer = 0; // specifies whether to follow the player around
 
 static unsigned char cheat_amap_seq[] = { 0xb2, 0x26, 0x26, 0x2e, 0xff };
 static cheatseq_t cheat_amap = { cheat_amap_seq, 0 };
@@ -646,6 +648,14 @@ AM_Responder
 	    if (!followplayer) m_paninc.x = -FTOM(F_PANINC);
 	    else rc = false;
 	    break;
+	  case AM_PANRIGHT1KEY: // pan right
+	    if (!followplayer) m_paninc.x = FTOM(F_PANINC);
+	    else rc = false;
+	    break;
+	  case AM_PANLEFT1KEY: // pan left
+	    if (!followplayer) m_paninc.x = -FTOM(F_PANINC);
+	    else rc = false;
+	    break;
 	  case AM_PANUPKEY: // pan up
 	    if (!followplayer) m_paninc.y = FTOM(F_PANINC);
 	    else rc = false;
@@ -714,6 +724,12 @@ AM_Responder
 	    if (!followplayer) m_paninc.x = 0;
 	    break;
 	  case AM_PANLEFTKEY:
+	    if (!followplayer) m_paninc.x = 0;
+	    break;
+	  case AM_PANRIGHT1KEY:
+	    if (!followplayer) m_paninc.x = 0;
+	    break;
+	  case AM_PANLEFT1KEY:
 	    if (!followplayer) m_paninc.x = 0;
 	    break;
 	  case AM_PANUPKEY:
@@ -1125,10 +1141,10 @@ void AM_drawWalls(void)
 	l.a.y = lines[i].v1->y;
 	l.b.x = lines[i].v2->x;
 	l.b.y = lines[i].v2->y;
-	if (cheating || (lines[i].flags & ML_MAPPED))
-	{
-	    if ((lines[i].flags & LINE_NEVERSEE) && !cheating)
-		continue;
+	//if (true)
+	//{
+	    //if ((lines[i].flags & LINE_NEVERSEE) && !cheating)
+		//continue;
 	    if (!lines[i].backsector)
 	    {
 		AM_drawMline(&l, WALLCOLORS+lightlev);
@@ -1156,11 +1172,11 @@ void AM_drawWalls(void)
 		    AM_drawMline(&l, TSWALLCOLORS+lightlev);
 		}
 	    }
-	}
-	else if (plr->powers[pw_allmap])
-	{
-	    if (!(lines[i].flags & LINE_NEVERSEE)) AM_drawMline(&l, GRAYS+3);
-	}
+	//}
+	//else if (plr->powers[pw_allmap])
+	//{
+	  //  if (!(lines[i].flags & LINE_NEVERSEE)) AM_drawMline(&l, GRAYS+3);
+	//}
     }
 }
 
@@ -1338,7 +1354,7 @@ void AM_Drawer (void)
 	AM_drawGrid(GRIDCOLORS);
     AM_drawWalls();
     AM_drawPlayers();
-    if (cheating==2)
+    //if (cheating==2)
 	AM_drawThings(THINGCOLORS, THINGRANGE);
     AM_drawCrosshair(XHAIRCOLORS);
 

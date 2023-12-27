@@ -71,21 +71,15 @@ static int flag = 0;
 //  mixing buffer, and the samplerate of the raw data.
 
 // Needed for calling the actual sound output.
-#define SAMPLECOUNT 512
-#define NUM_CHANNELS 8
-// It is 2 for 16bit, and 2 for two channels.
-#define BUFMUL 4
-#define MIXBUFFERSIZE (SAMPLECOUNT * BUFMUL)
+#define NUM_CHANNELS 24
 
-#define SAMPLERATE 11025 // Hz
-#define SAMPLESIZE 2     // 16bit
 
 // The actual lengths of all sound effects.
 int lengths[NUMSFX];
 
 audsrv_adpcm_t samples[NUMSFX];
-audsrv_adpcm_t *samplestoplay[24];
-static int volumes[24];
+audsrv_adpcm_t *samplestoplay[NUM_CHANNELS];
+static int volumes[NUM_CHANNELS];
 VagFile *vagFiles[NUMSFX];
 static int currentSampleIndex = 0;
 static int sampleToPlayIndex = 0;
@@ -143,7 +137,9 @@ getsfx(char *sfxname,
 
   sfx = (unsigned char *)W_CacheLumpNum(sfxlump, PU_STATIC);
 
-  VagFile *file = ConvertRawPCMToVag(sfx + 48, size - 48, SAMPLERATE, 1, 8);
+  u16 sampleRate = *((u16*)(sfx + 2));
+
+  VagFile *file = ConvertRawPCMToVag(sfx + 0x18, size - 0x18, sampleRate, 1, 8);
 
   Z_Free(sfx);
 
@@ -236,8 +232,7 @@ int I_StartSound(int id,
                  int pitch,
                  int priority)
 {
- 
-  if (sampleToPlayIndex >= 24)
+  if (sampleToPlayIndex >= NUM_CHANNELS)
     sampleToPlayIndex = 0;
   samplestoplay[sampleToPlayIndex] = &samples[id];
   volumes[sampleToPlayIndex++] = MAX_VOLUME * ((float)vol/15);
@@ -271,7 +266,7 @@ void I_UpdateSound(void)
 {
   
   // find a channel to play a sample
-  for (int i = currentSampleIndex; i < 24 && samplestoplay[i]; i++)
+  for (int i = currentSampleIndex; i < NUM_CHANNELS && samplestoplay[i]; i++)
   {
       int channel = audsrv_ch_play_adpcm(i, samplestoplay[i]);
       audsrv_adpcm_set_volume(channel, volumes[i]);
@@ -279,7 +274,7 @@ void I_UpdateSound(void)
       currentSampleIndex++;
   }
 
-  if (currentSampleIndex >= 24)
+  if (currentSampleIndex >= NUM_CHANNELS)
     currentSampleIndex = 0;
 }
 
@@ -320,7 +315,7 @@ void I_InitSound()
   // Secure and configure sound device first.
   printf("I_InitSound: ");
 
-  for (int i = 0; i < 24; i++)
+  for (int i = 0; i < NUM_CHANNELS; i++)
   {
     samplestoplay[i] = NULL;
   }

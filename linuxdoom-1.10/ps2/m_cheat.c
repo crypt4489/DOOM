@@ -46,7 +46,7 @@ boolean cht_compareCheat(cheatseq_t *cheat, char *string)
     }
     int len = strlen(string);
     unsigned char *cheat_sequence = cheat->sequence;
-   
+    
     for (i = 0; i < len && (cheat_sequence[i] != 0xff && cheat_sequence[i] != 1) ; i++)
     {
         if (cheat_xlate_table[string[i]] != cheat_sequence[i])

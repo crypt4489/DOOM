@@ -1483,7 +1483,7 @@ boolean M_Responder(event_t *ev)
             cheatStringEnter = 0;
             // strcpy(&cheatgamestring[0], saveOldString);
             break;
-
+        #include "log/ps_log.h"
         case KEY_SELECT:
             cheatStringEnter = 0;
             if (cheatgamestring[0])

@@ -493,8 +493,10 @@ void HU_Drawer(void)
     HUlib_drawIText(&w_chat);
     if (automapactive)
 	HUlib_drawTextLine(&w_title, false);
-    if (plr->foundsecretarea && usergame)
+    if (plr->foundsecretarea && usergame) {
     HU_WriteText(85, 80, "A SECRET IS REVEALED!");
+    
+    }
 
 }
 

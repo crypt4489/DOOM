@@ -35,7 +35,7 @@ rcsid[] = "$Id: p_user.c,v 1.3 1997/01/28 22:08:29 b1 Exp $";
 
 #include "doomstat.h"
 
-
+#define AIRRESISTANCE 0x0000f000
 
 // Index of the special effects (INVUL inverse) map.
 #define INVERSECOLORMAP		32
@@ -140,11 +140,53 @@ void P_CalcHeight (player_t* player)
 	player->viewz = player->mo->ceilingz-4*FRACUNIT;
 }
 
+#include "log/ps_log.h"
+void P_JumpPlayer(player_t *player, char jumpcmd)
+{
+	if (!player->jump.jumping && jumpcmd)
+	{
+		player->jump.jumping = true;
+		player->jump.jumpingdir = true;
+		player->mo->momz = (10<<16);
+		return;
+	}
 
+	if(player->jump.jumping)
+	{
+		if (player->jump.jumpingdir)
+		{
+			if (player->mo->momz < 0)
+			{
+				player->jump.jumpingdir = false;
+			}
+
+			if (player->mo->ceilingz <= player->mo->z)
+			{
+				player->jump.jumpingdir = false;
+				player->mo->momz = -FRACUNIT;
+			} else {		
+				player->mo->momz-=(1<<4);
+			}
+
+		} else {
+			if (player->mo->floorz >= player->mo->z)
+			{	
+				player->jump.jumping = false;
+				return;
+			} else {
+				player->mo->momz-=FRACUNIT;
+			}
+		}
+
+		player->mo->momx = FixedMul (player->mo->momx, AIRRESISTANCE);
+		player->mo->momy = FixedMul (player->mo->momy, AIRRESISTANCE);
+	} 
+}
 
 //
 // P_MovePlayer
 //
+#include "log/ps_log.h"
 void P_MovePlayer (player_t* player)
 {
     ticcmd_t*		cmd;
@@ -152,18 +194,27 @@ void P_MovePlayer (player_t* player)
     cmd = &player->cmd;
 	
     player->mo->angle += (cmd->angleturn<<16);
-
+	
     // Do not let the player control movement
     //  if not onground.
     onground = (player->mo->z <= player->mo->floorz);
 	
-    if (cmd->forwardmove && onground)
-	P_Thrust (player, player->mo->angle, cmd->forwardmove*2048);
-    
-    if (cmd->sidemove && onground)
-	P_Thrust (player, player->mo->angle-ANG90, cmd->sidemove*2048);
+    if (cmd->forwardmove && (onground || player->jump.jumping))
+	{
+		P_Thrust (player, player->mo->angle, cmd->forwardmove*2048);
+	}
 
-    if ( (cmd->forwardmove || cmd->sidemove) 
+    if (cmd->sidemove && (onground || player->jump.jumping))
+	{
+		P_Thrust (player, player->mo->angle-ANG90, cmd->sidemove*2048);
+	}
+
+	if (onground || player->jump.jumping)
+	{
+		P_JumpPlayer(player, cmd->upmove);
+	}
+
+    if ( (cmd->forwardmove || cmd->sidemove || cmd->upmove) 
 	 && player->mo->state == &states[S_PLAY] )
     {
 	P_SetMobjState (player->mo, S_PLAY_RUN1);

@@ -76,7 +76,11 @@ typedef enum
 
 } cheat_t;
 
-
+typedef struct jumping_t
+{
+    boolean jumping; //active jumping
+    boolean jumpingdir; //direction of jumping, true=rising, false=falling
+} Jumping;
 //
 // Extended player object info: player_t
 //
@@ -163,6 +167,7 @@ typedef struct player_s
     // True if secret level has been done.
     boolean		didsecret;
     boolean     foundsecretarea;
+    Jumping     jump;
 
 } player_t;
 

@@ -51,7 +51,7 @@ rcsid[] = "$Id: p_pspr.c,v 1.5 1997/02/03 22:45:12 b1 Exp $";
 // plasma cells for a bfg attack
 #define BFGCELLS		40		
 
-static int sawTimer = 6;
+static int sawTimer = 14;
 
 //
 // P_SetPsprite
@@ -298,7 +298,7 @@ A_WeaponReady
 	&& psp->state == &states[S_SAW])
     {
 	S_StartSound (player->mo, sfx_sawidl);
-    sawTimer = 6;
+    sawTimer = 14;
     }
     
     // check for change
@@ -522,14 +522,14 @@ A_Saw
     if (!linetarget)
     {
     
-    if ((sawTimer & 0x7) == 0x7)
+    if ((sawTimer & 0xf) > 0xc)
 	    S_StartSound (player->mo, sfx_sawful);
 	return;
     }
-    if ((sawTimer & 0x7) == 0x7)
+    if ((sawTimer & 0xf) > 0xc)
     S_StartSound (player->mo, sfx_sawhit);
 
-    sawTimer = sawTimer % 0x7;
+    sawTimer = sawTimer % 0xf;
 	
     // turn to face target
     angle = R_PointToAngle2 (player->mo->x, player->mo->y,
