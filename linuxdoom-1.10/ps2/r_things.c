@@ -388,7 +388,7 @@ void R_DrawMaskedColumn (column_t* column)
 }
 
 
-
+#include "log/ps_log.h"
 //
 // R_DrawVisSprite
 //  mfloorclip and mceilingclip should also be set.
@@ -420,7 +420,6 @@ R_DrawVisSprite
 	dc_translation = translationtables - 256 +
 	    ( (vis->mobjflags & MF_TRANSLATION) >> (MF_TRANSSHIFT-8) );
     }
-	
     dc_iscale = abs(vis->xiscale)>>detailshift;
     dc_texturemid = vis->texturemid;
     frac = vis->startfrac;
@@ -683,7 +682,7 @@ void R_DrawPSprite (pspdef_t* psp)
 	return;		
 
     tx +=  spritewidth[lump];
-    x2 = ((centerxfrac + FixedMul (tx, pspritescale) ) >>FRACBITS) - 1;
+    x2 = ((centerxfrac + FixedMul (tx, pspritescale) ) >>FRACBITS)-2;
 
     // off the left side
     if (x2 < 0)
@@ -692,7 +691,7 @@ void R_DrawPSprite (pspdef_t* psp)
     // store information in a vissprite
     vis = &avis;
     vis->mobjflags = 0;
-    vis->texturemid = (BASEYCENTER<<FRACBITS)+FRACUNIT/2-(psp->sy-spritetopoffset[lump]);
+   
     vis->x1 = x1 < 0 ? 0 : x1;
     vis->x2 = x2 >= viewwidth ? viewwidth-1 : x2;	
     vis->scale = pspritescale<<detailshift;
@@ -707,6 +706,9 @@ void R_DrawPSprite (pspdef_t* psp)
 	vis->xiscale = pspriteiscale;
 	vis->startfrac = 0;
     }
+
+     vis->texturemid = (BASEYCENTER<<FRACBITS)+FRACUNIT/2-(psp->sy-spritetopoffset[lump]) + FixedMul(((centery-viewheight/2)<<FRACBITS),
+			vis->xiscale);;
     
     if (vis->x1 > x1)
 	vis->startfrac += vis->xiscale*(vis->x1-x1);

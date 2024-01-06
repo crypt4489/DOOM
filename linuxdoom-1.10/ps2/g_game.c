@@ -149,6 +149,8 @@ int key_forward;
 int key_back;
 int key_lookright;
 int key_lookleft;
+int key_lookup;
+int key_lookdown;
 int key_fire;
 int key_use;
 int key_strafe;
@@ -318,15 +320,15 @@ void G_BuildTiccmd(ticcmd_t *cmd)
         if (joyxmove < 0)
             side -= sidemove[speed];
     }
-    else
-    {
-        if (gamekeydown[key_lookright])
-        {
-            cmd->angleturn -= (angleturn[tspeed] * ((lookSensitivity >> 1) + 1));
-        }
-        if (gamekeydown[key_lookleft])
-            cmd->angleturn += (angleturn[tspeed] * ((lookSensitivity >> 1) + 1));
-    }
+    
+    if (gamekeydown[key_lookright])
+        cmd->angleturn -= (angleturn[tspeed] * ((lookSensitivity >> 1) + 1));
+    if (gamekeydown[key_lookleft])
+        cmd->angleturn += (angleturn[tspeed] * ((lookSensitivity >> 1) + 1));
+    if (gamekeydown[key_lookup])
+        cmd->yangleturn += ((lookSensitivity >> 1) + 5);
+    if (gamekeydown[key_lookdown])
+        cmd->yangleturn -=  ((lookSensitivity >> 1) + 5);
 
     if (gamekeydown[key_up] || gamekeydown[key_forward])
     {
@@ -345,8 +347,8 @@ void G_BuildTiccmd(ticcmd_t *cmd)
         side += sidemove[speed];
     if (gamekeydown[key_left] || gamekeydown[key_strafeleft])
         side -= sidemove[speed];
-    
-    if (gamekeydown[KEY_BACKSPACE])    
+
+    if (gamekeydown[KEY_BACKSPACE])
         cmd->upmove = 1;
 
     // buttons
@@ -858,7 +860,6 @@ void G_PlayerReborn(int player)
     for (i = 0; i < NUMAMMO; i++)
         p->maxammo[i] = maxammo[i];
 
-    memset(&p->jump, 0, sizeof(Jumping));
 }
 
 //
@@ -908,7 +909,7 @@ G_CheckSpot(int playernum,
     mo = P_SpawnMobj(x + 20 * finecosine[an], y + 20 * finesine[an], ss->sector->floorheight, MT_TFOG);
 
     if (players[consoleplayer].viewz != 1)
-     S_StartSound (mo, sfx_telept);	// don't start sound on first frame
+        S_StartSound(mo, sfx_telept); // don't start sound on first frame
 
     return true;
 }

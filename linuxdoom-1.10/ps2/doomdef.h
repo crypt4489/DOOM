@@ -264,6 +264,8 @@ typedef enum
 #define KEY_MOVE_LEFT    18
 #define KEY_MOVE_RIGHT   19
 #define KEY_SPEED        20
+#define KEY_LOOK_UP      21
+#define KEY_LOOK_DOWN    22
 #define KEY_F1		(0x80+0x3b)
 #define KEY_F2		(0x80+0x3c)
 #define KEY_F3		(0x80+0x3d)

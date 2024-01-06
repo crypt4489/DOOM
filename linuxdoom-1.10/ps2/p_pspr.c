@@ -51,8 +51,6 @@ rcsid[] = "$Id: p_pspr.c,v 1.5 1997/02/03 22:45:12 b1 Exp $";
 // plasma cells for a bfg attack
 #define BFGCELLS		40		
 
-static int sawTimer = 14;
-
 //
 // P_SetPsprite
 //
@@ -297,8 +295,9 @@ A_WeaponReady
     if (player->readyweapon == wp_chainsaw
 	&& psp->state == &states[S_SAW])
     {
-	S_StartSound (player->mo, sfx_sawidl);
-    sawTimer = 14;
+     S_MuteSound(sfx_sawful);
+     S_MuteSound(sfx_sawhit);
+	 S_StartSound (player->mo, sfx_sawidl);
     }
     
     // check for change
@@ -518,18 +517,14 @@ A_Saw
     // use meleerange + 1 se the puff doesn't skip the flash
     slope = P_AimLineAttack (player->mo, angle, MELEERANGE+1);
     P_LineAttack (player->mo, angle, MELEERANGE+1, slope, damage);
-    sawTimer++;
+    S_MuteSound(sfx_sawidl);
     if (!linetarget)
     {
-    
-    if ((sawTimer & 0xf) > 0xc)
 	    S_StartSound (player->mo, sfx_sawful);
-	return;
+	    return;
     }
-    if ((sawTimer & 0xf) > 0xc)
     S_StartSound (player->mo, sfx_sawhit);
 
-    sawTimer = sawTimer % 0xf;
 	
     // turn to face target
     angle = R_PointToAngle2 (player->mo->x, player->mo->y,
@@ -606,7 +601,6 @@ A_FirePlasma
 //
 fixed_t		bulletslope;
 
-
 void P_BulletSlope (mobj_t*	mo)
 {
     angle_t	an;
@@ -624,6 +618,10 @@ void P_BulletSlope (mobj_t*	mo)
 	    an -= 2<<26;
 	    bulletslope = P_AimLineAttack (mo, an, 16*64*FRACUNIT);
 	}
+    if (!linetarget)
+    {
+        bulletslope = (mo->player->lookdir<<FRACBITS)/200;
+    }
     }
 }
 
@@ -644,6 +642,9 @@ P_GunShot
 
     if (!accurate)
 	angle += (P_Random()-P_Random())<<18;
+
+    //if (mo->player)
+   // angle += ((mo->player->lookdir << 16)/200);
 
     P_LineAttack (mo, angle, MISSILERANGE, bulletslope, damage);
 }

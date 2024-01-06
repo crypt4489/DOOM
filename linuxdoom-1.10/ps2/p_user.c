@@ -186,6 +186,10 @@ void P_JumpPlayer(player_t *player, char jumpcmd)
 //
 // P_MovePlayer
 //
+
+#define MAXLOOKDIR 400
+#define MINLOOKDIR -MAXLOOKDIR
+
 #include "log/ps_log.h"
 void P_MovePlayer (player_t* player)
 {
@@ -219,6 +223,13 @@ void P_MovePlayer (player_t* player)
     {
 	P_SetMobjState (player->mo, S_PLAY_RUN1);
     }
+
+	player->lookdir += (cmd->yangleturn);
+
+	if (player->lookdir >= MAXLOOKDIR)
+		player->lookdir = MAXLOOKDIR;	
+	else if (player->lookdir <= MINLOOKDIR)
+		player->lookdir = MINLOOKDIR;
 }	
 
 

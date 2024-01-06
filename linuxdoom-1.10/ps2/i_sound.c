@@ -214,6 +214,26 @@ int I_GetSfxLumpNum(sfxinfo_t *sfx)
   return W_GetNumForName(namebuf);
 }
 
+
+static boolean I_CountSoundPlaying(int id)
+{
+  audsrv_adpcm_t *sample = &samples[id];
+  int count = 0;
+  for (int i = 0; i<NUM_CHANNELS; i++)
+  {
+    if (audsrv_is_adpcm_playing(i, sample))
+    {
+      count++;
+    }
+  }
+  
+  if (count >= 7)
+  {
+    return false;
+  }
+  return true;
+}
+
 //
 // Starting a sound means adding it
 //  to the current list of active sounds
@@ -232,6 +252,10 @@ int I_StartSound(int id,
                  int pitch,
                  int priority)
 {
+  if (!I_CountSoundPlaying(id))
+  {
+    return -1;
+  }
   if (sampleToPlayIndex >= NUM_CHANNELS)
     sampleToPlayIndex = 0;
   samplestoplay[sampleToPlayIndex] = &samples[id];
@@ -241,6 +265,14 @@ int I_StartSound(int id,
 
 void I_StopSound(int handle)
 {
+  audsrv_adpcm_t *sample = &samples[handle];
+  for (int i = 0; i<NUM_CHANNELS; i++)
+  {
+    if (audsrv_is_adpcm_playing(i, sample))
+    {
+      audsrv_adpcm_set_volume(i, 0);
+    }
+  }
 }
 
 int I_SoundIsPlaying(int handle)
@@ -264,7 +296,17 @@ int I_SoundIsPlaying(int handle)
 //
 void I_UpdateSound(void)
 {
-  
+  // if we just paused game, mute all game sounds, but play menu sounds
+  static boolean justhappened = true;
+  if (paused && justhappened)
+  {
+    justhappened = false;
+    for (int i = NUM_CHANNELS; i>=0; i--)
+      audsrv_adpcm_set_volume(i, 0);
+    return;
+  } else if (!(paused || justhappened)) {
+    justhappened = true;
+  }
   // find a channel to play a sample
   for (int i = currentSampleIndex; i < NUM_CHANNELS && samplestoplay[i]; i++)
   {
@@ -277,6 +319,8 @@ void I_UpdateSound(void)
   if (currentSampleIndex >= NUM_CHANNELS)
     currentSampleIndex = 0;
 }
+
+
 
 //
 // This would be used to write out the mixbuffer
@@ -423,9 +467,7 @@ void I_HandleSoundTimer(int ignore)
 // Get the interrupt. Set duration in millisecs.
 int I_SoundSetTimer(int duration_of_tick)
 {
-  int res;
-
-  return res;
+  return 0;
 }
 
 // Remove the interrupt. Set duration to zero.

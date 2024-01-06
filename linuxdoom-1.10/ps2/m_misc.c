@@ -181,6 +181,8 @@ extern int  key_forward;
 extern int  key_back;
 extern int  key_lookright;
 extern int  key_lookleft;
+extern int  key_lookup;
+extern int  key_lookdown;
 
 extern int	key_fire;
 extern int	key_use;
@@ -290,6 +292,8 @@ default_t	defaults[] =
     {"key_back", &key_back, KEY_BACK},
     {"key_lookright", &key_lookright, KEY_LOOK_RIGHT},
     {"key_lookleft", &key_lookleft, KEY_LOOK_LEFT},
+    {"key_lookup", &key_lookup, KEY_LOOK_UP},
+    {"key_lookdown", &key_lookdown, KEY_LOOK_DOWN},
     {"key_speed",&key_speed, KEY_SPEED},
     {"use_joystick",&usejoystick, 0},
     {"joyb_fire",&joybfire,0},

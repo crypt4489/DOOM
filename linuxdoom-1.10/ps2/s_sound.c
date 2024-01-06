@@ -192,7 +192,10 @@ void S_Init
 }
 
 
-
+void S_MuteSound(int id)
+{
+    I_StopSound(id);
+}
 
 //
 // Per level startup code.

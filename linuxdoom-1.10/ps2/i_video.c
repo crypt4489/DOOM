@@ -63,8 +63,6 @@ static const char
 #include "gamemanager/ps_manager.h"
 #include "system/ps_timer.h"
 
-
-
 extern u32 SKYDOOM_HEIGHT;
 extern u32 SKYDOOM_WIDTH;
 
@@ -90,7 +88,8 @@ static u32 events_id[16] = {KEY_ESCAPE, KEY_SPEED, 0, KEY_PAUSE, KEY_UPARROW, KE
 static u8 JoyRHPv = 127;
 static u8 JoyLVPv = 127;
 static u8 JoyLHPv = 127;
-//static u8 framebuffer[320*240*4];
+static u8 JoyRVPv = 127;
+// static u8 framebuffer[320*240*4];
 static u32 lower = 50;
 static u32 upper = 200;
 void UpdatePad()
@@ -105,7 +104,6 @@ void UpdatePad()
 
 	state = padRead(port, 0, &buttons);
 
-
 	if (state != 0)
 	{
 		currData = 0xffff ^ buttons.btns;
@@ -114,39 +112,68 @@ void UpdatePad()
 
 		if (buttons.rjoy_h <= lower && JoyRHPv > lower)
 		{
-			DEBUGLOG("LOOK LEFT PRESSED %d %d", 
-			buttons.rjoy_h, JoyRHPv);
+			DEBUGLOG("LOOK LEFT PRESSED %d %d",
+					 buttons.rjoy_h, JoyRHPv);
 			events[0].type = ev_keydown;
 			events[0].data1 = KEY_LOOK_LEFT;
 			D_PostEvent(&events[0]);
-			JoyRHPv = buttons.rjoy_h;
 		}
-		 if (buttons.rjoy_h > lower && JoyRHPv <= lower)
+		if (buttons.rjoy_h > lower && JoyRHPv <= lower)
 		{
-			DEBUGLOG("LOOK LEFT RELEASED %d %d", 
-			buttons.rjoy_h, JoyRHPv);
+			DEBUGLOG("LOOK LEFT RELEASED %d %d",
+					 buttons.rjoy_h, JoyRHPv);
 			events[0].type = ev_keyup;
 			events[0].data1 = KEY_LOOK_LEFT;
 			D_PostEvent(&events[0]);
-			JoyRHPv = buttons.rjoy_h;
 		}
-		 if (buttons.rjoy_h >= upper && JoyRHPv < upper)
+		if (buttons.rjoy_h >= upper && JoyRHPv < upper)
 		{
-			DEBUGLOG("LOOK RIGHT PRESSED %d %d", 
-			buttons.rjoy_h, JoyRHPv);
+			DEBUGLOG("LOOK RIGHT PRESSED %d %d",
+					 buttons.rjoy_h, JoyRHPv);
 			events[0].type = ev_keydown;
 			events[0].data1 = KEY_LOOK_RIGHT;
 			D_PostEvent(&events[0]);
-			JoyRHPv = buttons.rjoy_h;
 		}
-		 if (buttons.rjoy_h < upper && JoyRHPv >= upper)
+		if (buttons.rjoy_h < upper && JoyRHPv >= upper)
 		{
-			DEBUGLOG("LOOK RIGHT RELEASED %d %d", 
-			buttons.rjoy_h, JoyRHPv);
+			DEBUGLOG("LOOK RIGHT RELEASED %d %d",
+					 buttons.rjoy_h, JoyRHPv);
 			events[1].type = ev_keyup;
 			events[1].data1 = KEY_LOOK_RIGHT;
 			D_PostEvent(&events[1]);
-			JoyRHPv = buttons.rjoy_h;
+		}
+
+		if (buttons.rjoy_v <= lower && JoyRVPv > lower)
+		{
+			DEBUGLOG("LOOK UP PRESSED %d %d",
+					 buttons.rjoy_v, JoyRVPv);
+			events[0].type = ev_keydown;
+			events[0].data1 = KEY_LOOK_UP;
+			D_PostEvent(&events[0]);
+		}
+		if (buttons.rjoy_v > lower && JoyRVPv <= lower)
+		{
+			DEBUGLOG("LOOK UP RELEASED %d %d",
+					 buttons.rjoy_h, JoyRVPv);
+			events[0].type = ev_keyup;
+			events[0].data1 = KEY_LOOK_UP;
+			D_PostEvent(&events[0]);
+		}
+		if (buttons.rjoy_v >= upper && JoyRVPv < upper)
+		{
+			DEBUGLOG("LOOK DOWN PRESSED %d %d",
+					 buttons.rjoy_v, JoyRVPv);
+			events[0].type = ev_keydown;
+			events[0].data1 = KEY_LOOK_DOWN;
+			D_PostEvent(&events[0]);
+		}
+		if (buttons.rjoy_v < upper && JoyRVPv >= upper)
+		{
+			DEBUGLOG("LOOK DOWN RELEASED %d %d",
+					 buttons.rjoy_v, JoyRVPv);
+			events[1].type = ev_keyup;
+			events[1].data1 = KEY_LOOK_DOWN;
+			D_PostEvent(&events[1]);
 		}
 
 		if (buttons.ljoy_h <= lower && JoyLHPv > lower)
@@ -155,49 +182,43 @@ void UpdatePad()
 			events[1].type = ev_keydown;
 			events[1].data1 = KEY_MOVE_LEFT;
 			D_PostEvent(&events[1]);
-			JoyLHPv = buttons.ljoy_h;
 		}
-		 if (buttons.ljoy_h > lower && JoyLHPv <= lower)
+		if (buttons.ljoy_h > lower && JoyLHPv <= lower)
 		{
 			DEBUGLOG("LEFT RELEASED %d %d", buttons.ljoy_h, JoyLHPv);
 			events[1].type = ev_keyup;
 			events[1].data1 = KEY_MOVE_LEFT;
 			D_PostEvent(&events[1]);
-			JoyLHPv = buttons.ljoy_h;
 		}
-		 if (buttons.ljoy_h >= upper && JoyLHPv < upper)
+		if (buttons.ljoy_h >= upper && JoyLHPv < upper)
 		{
 			DEBUGLOG("RIGHT PRESSED %d %d", buttons.ljoy_h, JoyLHPv);
 			events[1].type = ev_keydown;
 			events[1].data1 = KEY_MOVE_RIGHT;
 			D_PostEvent(&events[1]);
-			JoyLHPv = buttons.ljoy_h;
 		}
-		 if (buttons.ljoy_h < upper && JoyLHPv >= upper)
+		if (buttons.ljoy_h < upper && JoyLHPv >= upper)
 		{
 			DEBUGLOG("RIGHT RELEASED %d %d", buttons.ljoy_h, JoyLHPv);
 			events[1].type = ev_keyup;
 			events[1].data1 = KEY_MOVE_RIGHT;
 			D_PostEvent(&events[1]);
-			JoyLHPv = buttons.ljoy_h;
 		}
 
 		if (buttons.ljoy_v <= lower && JoyLVPv > lower)
 		{
-			
+
 			DEBUGLOG("UP PRESSED %d %d", buttons.ljoy_v, JoyLVPv);
 			events[2].type = ev_keydown;
 			events[2].data1 = KEY_UPARROW;
 			D_PostEvent(&events[2]);
-			JoyLVPv = buttons.ljoy_v;
 		}
-		 if (buttons.ljoy_v > lower && JoyLVPv <= lower)
+		if (buttons.ljoy_v > lower && JoyLVPv <= lower)
 		{
 			DEBUGLOG("UP RELEASED %d %d", buttons.ljoy_v, JoyLVPv);
 			events[2].type = ev_keyup;
 			events[2].data1 = KEY_UPARROW;
 			D_PostEvent(&events[2]);
-			JoyLVPv = buttons.ljoy_v;
 		}
 		if (buttons.ljoy_v >= upper && JoyLVPv < upper)
 		{
@@ -205,7 +226,6 @@ void UpdatePad()
 			events[2].type = ev_keydown;
 			events[2].data1 = KEY_DOWNARROW;
 			D_PostEvent(&events[2]);
-			JoyLVPv = buttons.ljoy_v;
 		}
 		if (buttons.ljoy_v < upper && JoyLVPv >= upper)
 		{
@@ -213,15 +233,15 @@ void UpdatePad()
 			events[2].type = ev_keyup;
 			events[2].data1 = KEY_DOWNARROW;
 			D_PostEvent(&events[2]);
-			JoyLVPv = buttons.ljoy_v;
 		}
-		
-		
 
-	//	DEBUGLOG("%d %d", buttons.ljoy_v, JoyLVPv);
-	//	DEBUGLOG("%d %d", buttons.ljoy_h, JoyLHPv);
-	//	DEBUGLOG("%d %d", buttons.rjoy_h, JoyRHPv);
-
+		JoyRVPv = buttons.rjoy_v;
+		JoyRHPv = buttons.rjoy_h;
+		JoyLHPv = buttons.ljoy_h;
+		JoyLVPv = buttons.ljoy_v;
+		//	DEBUGLOG("%d %d", buttons.ljoy_v, JoyLVPv);
+		//	DEBUGLOG("%d %d", buttons.ljoy_h, JoyLHPv);
+		//	DEBUGLOG("%d %d", buttons.rjoy_h, JoyRHPv);
 
 		int padType = 0x0001;
 		for (int i = 0; padType != 0; i++)
@@ -231,7 +251,6 @@ void UpdatePad()
 				events[3].type = ev_keydown;
 				events[3].data1 = events_id[i];
 				D_PostEvent(&events[3]);
-				
 			}
 			// release
 			if (!(currData & padType) && (old_pad & padType))
@@ -244,9 +263,7 @@ void UpdatePad()
 			padType <<= 1;
 		}
 
-
 		old_pad = currData;
-	
 	}
 }
 
@@ -317,8 +334,6 @@ void I_ReadScreen(byte *scr)
 
 void UploadNewPalette(byte *palette)
 {
-
-	
 }
 
 //
@@ -335,7 +350,7 @@ void I_SetPalette(byte *palette)
 	for (i = 0; i < 256; i++)
 	{
 		/*
-		DEBUGLOG("%d %d %d", gammatable[usegamma][*clut_palette], 
+		DEBUGLOG("%d %d %d", gammatable[usegamma][*clut_palette],
 		gammatable[usegamma][*clut_palette+1], gammatable[usegamma][*clut_palette+2]);
 		*/
 		int c = gammatable[usegamma][*clut_palette++];
@@ -344,7 +359,6 @@ void I_SetPalette(byte *palette)
 		colors[i].g = c;
 		c = gammatable[usegamma][*clut_palette++];
 		colors[i].b = c;
-
 	}
 }
 
@@ -425,8 +439,6 @@ void DrawFullScreenQuad(int height, int width, Texture *_image)
 	SubmitDMABuffersAsPipeline(ret, NULL);
 }
 
-
-
 void I_InitGraphics(void)
 {
 	SKYDOOM_HEIGHT_HALF = SKYDOOM_HEIGHT >> 1;
@@ -450,7 +462,7 @@ void I_InitGraphics(void)
 
 	image->pixels = (u8 *)malloc(320 * 240 * 4);
 
-	//AddToManagerTexList(&g_Manager, image);
+	// AddToManagerTexList(&g_Manager, image);
 
 	timestart = timeend = getTicks(g_Manager.timer);
 }
