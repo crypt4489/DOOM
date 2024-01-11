@@ -191,7 +191,7 @@ P_GiveWeapon
 	player->pendingweapon = weapon;
 
 	if (player == &players[consoleplayer])
-	    S_StartSound (NULL, sfx_wpnup);
+	    S_StartSound (NULL, sfx_wpnup, MAX_SOUND_COUNT);
 	return false;
     }
 	
@@ -657,7 +657,7 @@ P_TouchSpecialThing
     P_RemoveMobj (special);
     player->bonuscount += BONUSADD;
     if (player == &players[consoleplayer])
-	S_StartSound (NULL, sound);
+	S_StartSound (NULL, sound, MAX_SOUND_COUNT);
 }
 
 #include "log/ps_log.h"

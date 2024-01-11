@@ -570,9 +570,9 @@ void HU_Ticker(void)
 			    message_on = true;
 			    message_counter = HU_MSGTIMEOUT;
 			    if ( gamemode == commercial )
-			      S_StartSound(0, sfx_radio);
+			      S_StartSound(0, sfx_radio, MAX_SOUND_COUNT);
 			    else
-			      S_StartSound(0, sfx_tink);
+			      S_StartSound(0, sfx_tink, MAX_SOUND_COUNT);
 			}
 			HUlib_resetIText(&w_inputbuffer[i]);
 		    }
@@ -586,7 +586,7 @@ void HU_Ticker(void)
     {
         if (secretmessagecounter == 90)
         {
-            S_StartSound(NULL, sfx_telept);
+            S_StartSound(NULL, sfx_telept, MAX_SOUND_COUNT);
         }
         
         if (--secretmessagecounter == 0)

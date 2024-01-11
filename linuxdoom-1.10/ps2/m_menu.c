@@ -687,7 +687,7 @@ void M_QuickSaveResponse(int ch)
     if (ch == KEY_ENTER)
     {
         M_DoSave(quickSaveSlot);
-        S_StartSound(NULL, sfx_swtchx);
+        S_StartSound(NULL, sfx_swtchx, MAX_SOUND_COUNT);
     }
 }
 
@@ -695,7 +695,7 @@ void M_QuickSave(void)
 {
     if (!usergame)
     {
-        S_StartSound(NULL, sfx_oof);
+        S_StartSound(NULL, sfx_oof, MAX_SOUND_COUNT);
         return;
     }
 
@@ -722,7 +722,7 @@ void M_QuickLoadResponse(int ch)
     if (ch == KEY_ENTER)
     {
         M_LoadSelect(quickSaveSlot);
-        S_StartSound(NULL, sfx_swtchx);
+        S_StartSound(NULL, sfx_swtchx, MAX_SOUND_COUNT);
     }
 }
 
@@ -1002,7 +1002,7 @@ void M_EndGame(int choice)
     choice = 0;
     if (!usergame)
     {
-        S_StartSound(NULL, sfx_oof);
+        S_StartSound(NULL, sfx_oof, MAX_SOUND_COUNT);
         return;
     }
 
@@ -1068,9 +1068,9 @@ void M_QuitResponse(int ch)
     if (!netgame)
     {
         if (gamemode == commercial)
-            S_StartSound(NULL, quitsounds2[(gametic >> 2) & 7]);
+            S_StartSound(NULL, quitsounds2[(gametic >> 2) & 7], MAX_SOUND_COUNT);
         else
-            S_StartSound(NULL, quitsounds[(gametic >> 2) & 7]);
+            S_StartSound(NULL, quitsounds[(gametic >> 2) & 7], MAX_SOUND_COUNT);
         // I_WaitVBL(105);
     }
     I_Quit();
@@ -1544,7 +1544,7 @@ boolean M_Responder(event_t *ev)
         messageNeedsInput = false;
 
         menuactive = false;
-        S_StartSound(NULL, sfx_swtchx);
+        S_StartSound(NULL, sfx_swtchx, MAX_SOUND_COUNT);
         return true;
     }
 
@@ -1562,14 +1562,14 @@ boolean M_Responder(event_t *ev)
             if (automapactive || chat_on)
                 return false;
             M_SizeDisplay(0);
-            S_StartSound(NULL, sfx_stnmov);
+            S_StartSound(NULL, sfx_stnmov, MAX_SOUND_COUNT);
             return true;
 
         case KEY_EQUALS: // Screen size up
             if (automapactive || chat_on)
                 return false;
             M_SizeDisplay(1);
-            S_StartSound(NULL, sfx_stnmov);
+            S_StartSound(NULL, sfx_stnmov, MAX_SOUND_COUNT);
             return true;
 
         case KEY_F1: // Help key
@@ -1581,18 +1581,18 @@ boolean M_Responder(event_t *ev)
                 currentMenu = &ReadDef1;
 
             itemOn = 0;
-            S_StartSound(NULL, sfx_swtchn);
+            S_StartSound(NULL, sfx_swtchn, MAX_SOUND_COUNT);
             return true;
 
         case KEY_F2: // Save
             M_StartControlPanel();
-            S_StartSound(NULL, sfx_swtchn);
+            S_StartSound(NULL, sfx_swtchn, MAX_SOUND_COUNT);
             M_SaveGame(0);
             return true;
 
         case KEY_F3: // Load
             M_StartControlPanel();
-            S_StartSound(NULL, sfx_swtchn);
+            S_StartSound(NULL, sfx_swtchn, MAX_SOUND_COUNT);
             M_LoadGame(0);
             return true;
 
@@ -1600,36 +1600,36 @@ boolean M_Responder(event_t *ev)
             M_StartControlPanel();
             currentMenu = &SoundDef;
             itemOn = sfx_vol;
-            S_StartSound(NULL, sfx_swtchn);
+            S_StartSound(NULL, sfx_swtchn, MAX_SOUND_COUNT);
             return true;
 
         case KEY_F5: // Detail toggle
             M_ChangeDetail(0);
-            S_StartSound(NULL, sfx_swtchn);
+            S_StartSound(NULL, sfx_swtchn, MAX_SOUND_COUNT);
             return true;
 
         case KEY_F6: // Quicksave
-            S_StartSound(NULL, sfx_swtchn);
+            S_StartSound(NULL, sfx_swtchn, MAX_SOUND_COUNT);
             M_QuickSave();
             return true;
 
         case KEY_F7: // End game
-            S_StartSound(NULL, sfx_swtchn);
+            S_StartSound(NULL, sfx_swtchn, MAX_SOUND_COUNT);
             M_EndGame(0);
             return true;
 
         case KEY_F8: // Toggle messages
             M_ChangeMessages(0);
-            S_StartSound(NULL, sfx_swtchn);
+            S_StartSound(NULL, sfx_swtchn, MAX_SOUND_COUNT);
             return true;
 
         case KEY_F9: // Quickload
-            S_StartSound(NULL, sfx_swtchn);
+            S_StartSound(NULL, sfx_swtchn, MAX_SOUND_COUNT);
             M_QuickLoad();
             return true;
 
         case KEY_F10: // Quit DOOM
-            S_StartSound(NULL, sfx_swtchn);
+            S_StartSound(NULL, sfx_swtchn, MAX_SOUND_COUNT);
             M_QuitDOOM(0);
             return true;
 
@@ -1669,7 +1669,7 @@ boolean M_Responder(event_t *ev)
             else
                 itemOn++;
             if (currentMenu->menuitems[itemOn].status != -1)
-                S_StartSound(NULL, sfx_pstop);
+                S_StartSound(NULL, sfx_pstop, MAX_SOUND_COUNT);
 
         
 
@@ -1684,7 +1684,7 @@ boolean M_Responder(event_t *ev)
             else
                 itemOn--;
            if (currentMenu->menuitems[itemOn].status != -1)
-                S_StartSound(NULL, sfx_pstop);
+                S_StartSound(NULL, sfx_pstop, MAX_SOUND_COUNT);
 
         } while (currentMenu->menuitems[itemOn].status == -1);
         return true;
@@ -1693,7 +1693,7 @@ boolean M_Responder(event_t *ev)
         if (currentMenu->menuitems[itemOn].routine &&
             currentMenu->menuitems[itemOn].status == 2)
         {
-            S_StartSound(NULL, sfx_stnmov);
+            S_StartSound(NULL, sfx_stnmov, MAX_SOUND_COUNT);
             currentMenu->menuitems[itemOn].routine(0);
         }
         return true;
@@ -1702,7 +1702,7 @@ boolean M_Responder(event_t *ev)
         if (currentMenu->menuitems[itemOn].routine &&
             currentMenu->menuitems[itemOn].status == 2)
         {
-            S_StartSound(NULL, sfx_stnmov);
+            S_StartSound(NULL, sfx_stnmov, MAX_SOUND_COUNT);
             currentMenu->menuitems[itemOn].routine(0);
         }
         return true;
@@ -1711,7 +1711,7 @@ boolean M_Responder(event_t *ev)
         if (currentMenu->menuitems[itemOn].routine &&
             currentMenu->menuitems[itemOn].status == 2)
         {
-            S_StartSound(NULL, sfx_stnmov);
+            S_StartSound(NULL, sfx_stnmov, MAX_SOUND_COUNT);
             currentMenu->menuitems[itemOn].routine(1);
         }
         return true;
@@ -1720,7 +1720,7 @@ boolean M_Responder(event_t *ev)
         if (currentMenu->menuitems[itemOn].routine &&
             currentMenu->menuitems[itemOn].status == 2)
         {
-            S_StartSound(NULL, sfx_stnmov);
+            S_StartSound(NULL, sfx_stnmov, MAX_SOUND_COUNT);
             currentMenu->menuitems[itemOn].routine(1);
         }
         return true;
@@ -1733,12 +1733,12 @@ boolean M_Responder(event_t *ev)
             if (currentMenu->menuitems[itemOn].status == 2)
             {
                 currentMenu->menuitems[itemOn].routine(1); // right arrow
-                S_StartSound(NULL, sfx_stnmov);
+                S_StartSound(NULL, sfx_stnmov, MAX_SOUND_COUNT);
             }
             else
             {
                 currentMenu->menuitems[itemOn].routine(itemOn);
-                S_StartSound(NULL, sfx_pistol);
+                S_StartSound(NULL, sfx_pistol, MAX_SOUND_COUNT);
             }
         }
         return true;
@@ -1746,7 +1746,7 @@ boolean M_Responder(event_t *ev)
     case KEY_ESCAPE:
         currentMenu->lastOn = itemOn;
         M_ClearMenus();
-        S_StartSound(NULL, sfx_swtchx);
+        S_StartSound(NULL, sfx_swtchx, MAX_SOUND_COUNT);
         sendpause = true;
         return true;
 
@@ -1756,7 +1756,7 @@ boolean M_Responder(event_t *ev)
         {
             currentMenu = currentMenu->prevMenu;
             itemOn = currentMenu->lastOn;
-            S_StartSound(NULL, sfx_swtchn);
+            S_StartSound(NULL, sfx_swtchn, MAX_SOUND_COUNT);
         }
         return true;
 
@@ -1765,14 +1765,14 @@ boolean M_Responder(event_t *ev)
             if (currentMenu->menuitems[i].alphaKey == ch && currentMenu->menuitems[i].status != -1)
             {
                 itemOn = i;
-                S_StartSound(NULL, sfx_pstop);
+                S_StartSound(NULL, sfx_pstop, MAX_SOUND_COUNT);
                 return true;
             }
         for (i = 0; i <= itemOn; i++)
             if (currentMenu->menuitems[i].alphaKey == ch && currentMenu->menuitems[i].status != -1)
             {
                 itemOn = i;
-                S_StartSound(NULL, sfx_pstop);
+                S_StartSound(NULL, sfx_pstop, MAX_SOUND_COUNT);
                 return true;
             }
         break;

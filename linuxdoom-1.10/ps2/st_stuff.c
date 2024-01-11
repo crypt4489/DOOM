@@ -876,7 +876,7 @@ boolean ST_checkCheat(char *stringinput)
 		plyr->message = STSTR_CLEV;
 		G_DeferedInitNew(gameskill, epsd, map);
 		M_ClearMenus();
-        S_StartSound(NULL, sfx_swtchx);
+        S_StartSound(NULL, sfx_swtchx, MAX_SOUND_COUNT);
         paused = false;
 	}
 }

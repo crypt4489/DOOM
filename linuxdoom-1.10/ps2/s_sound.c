@@ -258,7 +258,8 @@ void
 S_StartSoundAtVolume
 ( void*		origin_p,
   int		sfx_id,
-  int		volume )
+  int		volume,
+  int       count )
 {
 
   int		rc;
@@ -391,20 +392,20 @@ S_StartSoundAtVolume
 				       volume,
 				       sep,
 				       pitch,
-				       priority);
+				       priority, count);
 }	
 
 void
 S_StartSound
 ( void*		origin,
-  int		sfx_id )
+  int		sfx_id, int count )
 {
 #ifdef SAWDEBUG
     // if (sfx_id == sfx_sawful)
     // sfx_id = sfx_itemup;
 #endif
   
-    S_StartSoundAtVolume(origin, sfx_id, snd_SfxVolume);
+    S_StartSoundAtVolume(origin, sfx_id, snd_SfxVolume, count);
 
 
     // UNUSED. We had problems, had we not?

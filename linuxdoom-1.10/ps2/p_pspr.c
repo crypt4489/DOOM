@@ -142,7 +142,7 @@ void P_BringUpWeapon (player_t* player)
 	player->pendingweapon = player->readyweapon;
 		
     if (player->pendingweapon == wp_chainsaw)
-	S_StartSound (player->mo, sfx_sawup);
+	S_StartSound (player->mo, sfx_sawup, MAX_SOUND_COUNT);
 		
     newstate = weaponinfo[player->pendingweapon].upstate;
 
@@ -295,9 +295,9 @@ A_WeaponReady
     if (player->readyweapon == wp_chainsaw
 	&& psp->state == &states[S_SAW])
     {
-     S_MuteSound(sfx_sawful);
-     S_MuteSound(sfx_sawhit);
-	 S_StartSound (player->mo, sfx_sawidl);
+     //S_MuteSound(sfx_sawful);
+    // S_MuteSound(sfx_sawhit);
+	 S_StartSound (player->mo, sfx_sawidl, MAX_SOUND_COUNT);
     }
     
     // check for change
@@ -487,7 +487,7 @@ A_Punch
     // turn to face target
     if (linetarget)
     {
-	S_StartSound (player->mo, sfx_punch);
+	S_StartSound (player->mo, sfx_punch, MAX_SOUND_COUNT);
 	player->mo->angle = R_PointToAngle2 (player->mo->x,
 					     player->mo->y,
 					     linetarget->x,
@@ -520,10 +520,10 @@ A_Saw
     S_MuteSound(sfx_sawidl);
     if (!linetarget)
     {
-	    S_StartSound (player->mo, sfx_sawful);
+	    S_StartSound (player->mo, sfx_sawful, 1);
 	    return;
     }
-    S_StartSound (player->mo, sfx_sawhit);
+    S_StartSound (player->mo, sfx_sawhit, 1);
 
 	
     // turn to face target
@@ -658,7 +658,7 @@ A_FirePistol
 ( player_t*	player,
   pspdef_t*	psp ) 
 {
-    S_StartSound (player->mo, sfx_pistol);
+    S_StartSound (player->mo, sfx_pistol, MAX_SOUND_COUNT);
 
     P_SetMobjState (player->mo, S_PLAY_ATK2);
     player->ammo[weaponinfo[player->readyweapon].ammo]--;
@@ -682,7 +682,7 @@ A_FireShotgun
 {
     int		i;
 	
-    S_StartSound (player->mo, sfx_shotgn);
+    S_StartSound (player->mo, sfx_shotgn, MAX_SOUND_COUNT);
     P_SetMobjState (player->mo, S_PLAY_ATK2);
 
     player->ammo[weaponinfo[player->readyweapon].ammo]--;
@@ -712,7 +712,7 @@ A_FireShotgun2
     int		damage;
 		
 	
-    S_StartSound (player->mo, sfx_dshtgn);
+    S_StartSound (player->mo, sfx_dshtgn, MAX_SOUND_COUNT);
     P_SetMobjState (player->mo, S_PLAY_ATK2);
 
     player->ammo[weaponinfo[player->readyweapon].ammo]-=2;
@@ -744,7 +744,7 @@ A_FireCGun
 ( player_t*	player,
   pspdef_t*	psp ) 
 {
-    S_StartSound (player->mo, sfx_pistol);
+    S_StartSound (player->mo, sfx_pistol, MAX_SOUND_COUNT);
 
     if (!player->ammo[weaponinfo[player->readyweapon].ammo])
 	return;
@@ -829,7 +829,7 @@ A_BFGsound
 ( player_t*	player,
   pspdef_t*	psp )
 {
-    S_StartSound (player->mo, sfx_bfg);
+    S_StartSound (player->mo, sfx_bfg, MAX_SOUND_COUNT);
 }
 
 

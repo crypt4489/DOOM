@@ -101,7 +101,7 @@ void P_ExplodeMissile (mobj_t* mo)
     mo->flags &= ~MF_MISSILE;
 
     if (mo->info->deathsound)
-	S_StartSound (mo, mo->info->deathsound);
+	S_StartSound (mo, mo->info->deathsound, MAX_SOUND_COUNT);
 }
 
 
@@ -304,7 +304,7 @@ void P_ZMovement (mobj_t* mo)
 		// after hitting the ground (hard),
 		// and utter appropriate sound.
 		mo->player->deltaviewheight = mo->momz>>3;
-		S_StartSound (mo, sfx_oof);
+		S_StartSound (mo, sfx_oof, MAX_SOUND_COUNT);
 	    }
 	    mo->momz = 0;
 	}
@@ -377,14 +377,14 @@ P_NightmareRespawn (mobj_t* mobj)
 		      mobj->y,
 		      mobj->subsector->sector->floorheight , MT_TFOG); 
     // initiate teleport sound
-    S_StartSound (mo, sfx_telept);
+    S_StartSound (mo, sfx_telept, MAX_SOUND_COUNT);
 
     // spawn a teleport fog at the new spot
     ss = R_PointInSubsector (x,y); 
 
     mo = P_SpawnMobj (x, y, ss->sector->floorheight , MT_TFOG); 
 
-    S_StartSound (mo, sfx_telept);
+    S_StartSound (mo, sfx_telept, MAX_SOUND_COUNT);
 
     // spawn the new monster
     mthing = &mobj->spawnpoint;
@@ -608,7 +608,7 @@ void P_RespawnSpecials (void)
     // spawn a teleport fog at the new spot
     ss = R_PointInSubsector (x,y); 
     mo = P_SpawnMobj (x, y, ss->sector->floorheight , MT_IFOG); 
-    S_StartSound (mo, sfx_itmbk);
+    S_StartSound (mo, sfx_itmbk, MAX_SOUND_COUNT);
 
     // find which type to spawn
     for (i=0 ; i< NUMMOBJTYPES ; i++)
@@ -901,7 +901,7 @@ P_SpawnMissile
 		      source->z + 4*8*FRACUNIT, type);
     
    if (th->info->seesound)
-	S_StartSound (th, th->info->seesound);
+	S_StartSound (th, th->info->seesound, MAX_SOUND_COUNT);
 
     th->target = source;	// where it came from
     an = R_PointToAngle2 (source->x, source->y, dest->x, dest->y);	
@@ -974,7 +974,7 @@ P_SpawnPlayerMissile
     th = P_SpawnMobj (x,y,z, type);
 
     if (th->info->seesound)
-	S_StartSound (th, th->info->seesound);
+	S_StartSound (th, th->info->seesound, MAX_SOUND_COUNT);
 
     th->target = source;
     th->angle = an;

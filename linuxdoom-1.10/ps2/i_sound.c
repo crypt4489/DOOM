@@ -215,19 +215,19 @@ int I_GetSfxLumpNum(sfxinfo_t *sfx)
 }
 
 
-static boolean I_CountSoundPlaying(int id)
+static boolean I_CountSoundPlaying(int id, int count)
 {
   audsrv_adpcm_t *sample = &samples[id];
-  int count = 0;
+  int countl = 0;
   for (int i = 0; i<NUM_CHANNELS; i++)
   {
     if (audsrv_is_adpcm_playing(i, sample))
     {
-      count++;
+      countl++;
     }
   }
   
-  if (count >= 7)
+  if (countl > count)
   {
     return false;
   }
@@ -250,9 +250,10 @@ int I_StartSound(int id,
                  int vol,
                  int sep,
                  int pitch,
-                 int priority)
+                 int priority,
+                 int count)
 {
-  if (!I_CountSoundPlaying(id))
+  if (!I_CountSoundPlaying(id, count))
   {
     return -1;
   }

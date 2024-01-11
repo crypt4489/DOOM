@@ -28,6 +28,7 @@
 #pragma interface
 #endif
 
+#define MAX_SOUND_COUNT 8
 
 
 //
@@ -58,7 +59,8 @@ void S_Start(void);
 void
 S_StartSound
 ( void*		origin,
-  int		sound_id );
+  int		sound_id,
+  int       count );
 
 
 
@@ -67,7 +69,8 @@ void
 S_StartSoundAtVolume
 ( void*		origin,
   int		sound_id,
-  int		volume );
+  int		volume,
+  int       count );
 
 
 // Stop sound for thing at <origin>

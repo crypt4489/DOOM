@@ -75,19 +75,19 @@ void T_VerticalDoor (vldoor_t* door)
 	      case blazeRaise:
 		door->direction = -1; // time to go back down
 		S_StartSound((mobj_t *)&door->sector->soundorg,
-			     sfx_bdcls);
+			     sfx_bdcls, MAX_SOUND_COUNT);
 		break;
 		
 	      case normal:
 		door->direction = -1; // time to go back down
 		S_StartSound((mobj_t *)&door->sector->soundorg,
-			     sfx_dorcls);
+			     sfx_dorcls, MAX_SOUND_COUNT);
 		break;
 		
 	      case close30ThenOpen:
 		door->direction = 1;
 		S_StartSound((mobj_t *)&door->sector->soundorg,
-			    sfx_doropn);
+			    sfx_doropn, MAX_SOUND_COUNT);
 		break;
 		
 	      default:
@@ -106,7 +106,7 @@ void T_VerticalDoor (vldoor_t* door)
 		door->direction = 1;
 		door->type = normal;
 		S_StartSound((mobj_t *)&door->sector->soundorg,
-			    sfx_doropn);
+			    sfx_doropn, MAX_SOUND_COUNT);
 		break;
 		
 	      default:
@@ -130,7 +130,7 @@ void T_VerticalDoor (vldoor_t* door)
 		door->sector->specialdata = NULL;
 		P_RemoveThinker (&door->thinker);  // unlink and free
 		S_StartSound((mobj_t *)&door->sector->soundorg,
-			     sfx_bdcls);
+			     sfx_bdcls, MAX_SOUND_COUNT);
 		break;
 		
 	      case normal:
@@ -159,7 +159,7 @@ void T_VerticalDoor (vldoor_t* door)
 	      default:
 		door->direction = 1;
 		S_StartSound((mobj_t *)&door->sector->soundorg,
-			    sfx_doropn);
+			    sfx_doropn, MAX_SOUND_COUNT);
 		break;
 	    }
 	}
@@ -225,7 +225,7 @@ EV_DoLockedDoor
 	if (!p->cards[it_bluecard] && !p->cards[it_blueskull])
 	{
 	    p->message = PD_BLUEO;
-	    S_StartSound(NULL,sfx_oof);
+	    S_StartSound(NULL,sfx_oof, MAX_SOUND_COUNT);
 	    return 0;
 	}
 	break;
@@ -237,7 +237,7 @@ EV_DoLockedDoor
 	if (!p->cards[it_redcard] && !p->cards[it_redskull])
 	{
 	    p->message = PD_REDO;
-	    S_StartSound(NULL,sfx_oof);
+	    S_StartSound(NULL,sfx_oof, MAX_SOUND_COUNT);
 	    return 0;
 	}
 	break;
@@ -250,7 +250,7 @@ EV_DoLockedDoor
 	    !p->cards[it_yellowskull])
 	{
 	    p->message = PD_YELLOWO;
-	    S_StartSound(NULL,sfx_oof);
+	    S_StartSound(NULL,sfx_oof, MAX_SOUND_COUNT);
 	    return 0;
 	}
 	break;	
@@ -299,7 +299,7 @@ EV_DoDoor
 	    door->direction = -1;
 	    door->speed = VDOORSPEED * 4;
 	    S_StartSound((mobj_t *)&door->sector->soundorg,
-			 sfx_bdcls);
+			 sfx_bdcls, MAX_SOUND_COUNT);
 	    break;
 	    
 	  case close:
@@ -307,14 +307,14 @@ EV_DoDoor
 	    door->topheight -= 4*FRACUNIT;
 	    door->direction = -1;
 	    S_StartSound((mobj_t *)&door->sector->soundorg,
-			 sfx_dorcls);
+			 sfx_dorcls, MAX_SOUND_COUNT);
 	    break;
 	    
 	  case close30ThenOpen:
 	    door->topheight = sec->ceilingheight;
 	    door->direction = -1;
 	    S_StartSound((mobj_t *)&door->sector->soundorg,
-			 sfx_dorcls);
+			 sfx_dorcls, MAX_SOUND_COUNT);
 	    break;
 	    
 	  case blazeRaise:
@@ -325,7 +325,7 @@ EV_DoDoor
 	    door->speed = VDOORSPEED * 4;
 	   if (door->topheight != sec->ceilingheight)
 		S_StartSound((mobj_t *)&door->sector->soundorg,
-			     sfx_bdopn);
+			     sfx_bdopn, MAX_SOUND_COUNT);
 	    break;
 	    
 	  case normal:
@@ -335,7 +335,7 @@ EV_DoDoor
 	    door->topheight -= 4*FRACUNIT;
 	   if (door->topheight != sec->ceilingheight)
 		S_StartSound((mobj_t *)&door->sector->soundorg,
-			     sfx_doropn);
+			     sfx_doropn, MAX_SOUND_COUNT);
 	    break;
 	    
 	  default:
@@ -376,7 +376,7 @@ EV_VerticalDoor
 	if (!player->cards[it_bluecard] && !player->cards[it_blueskull])
 	{
 	    player->message = PD_BLUEK;
-	    S_StartSound(NULL,sfx_oof);
+	    S_StartSound(NULL,sfx_oof, MAX_SOUND_COUNT);
 	    return;
 	}
 	break;
@@ -390,7 +390,7 @@ EV_VerticalDoor
 	    !player->cards[it_yellowskull])
 	{
 	    player->message = PD_YELLOWK;
-	    S_StartSound(NULL,sfx_oof);
+	    S_StartSound(NULL,sfx_oof, MAX_SOUND_COUNT);
 	    return;
 	}
 	break;
@@ -403,7 +403,7 @@ EV_VerticalDoor
 	if (!player->cards[it_redcard] && !player->cards[it_redskull])
 	{
 	    player->message = PD_REDK;
-	    S_StartSound(NULL,sfx_oof);
+	    S_StartSound(NULL,sfx_oof, MAX_SOUND_COUNT);
 	    return;
 	}
 	break;
@@ -441,16 +441,16 @@ EV_VerticalDoor
     {
       case 117:	// BLAZING DOOR RAISE
       case 118:	// BLAZING DOOR OPEN
-	S_StartSound((mobj_t *)&sec->soundorg,sfx_bdopn);
+	S_StartSound((mobj_t *)&sec->soundorg,sfx_bdopn, MAX_SOUND_COUNT);
 	break;
 	
       case 1:	// NORMAL DOOR SOUND
       case 31:
-	S_StartSound((mobj_t *)&sec->soundorg,sfx_doropn);
+	S_StartSound((mobj_t *)&sec->soundorg,sfx_doropn, MAX_SOUND_COUNT);
 	break;
 	
       default:	// LOCKED DOOR SOUND
-	S_StartSound((mobj_t *)&sec->soundorg,sfx_doropn);
+	S_StartSound((mobj_t *)&sec->soundorg,sfx_doropn, MAX_SOUND_COUNT);
 	break;
     }
 	

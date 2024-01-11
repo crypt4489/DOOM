@@ -909,7 +909,7 @@ G_CheckSpot(int playernum,
     mo = P_SpawnMobj(x + 20 * finecosine[an], y + 20 * finesine[an], ss->sector->floorheight, MT_TFOG);
 
     if (players[consoleplayer].viewz != 1)
-        S_StartSound(mo, sfx_telept); // don't start sound on first frame
+        S_StartSound(mo, sfx_telept, MAX_SOUND_COUNT); // don't start sound on first frame
 
     return true;
 }
