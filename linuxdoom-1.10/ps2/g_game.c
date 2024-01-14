@@ -325,11 +325,12 @@ void G_BuildTiccmd(ticcmd_t *cmd)
         cmd->angleturn -= (angleturn[tspeed] * ((lookSensitivity >> 1) + 1));
     if (gamekeydown[key_lookleft])
         cmd->angleturn += (angleturn[tspeed] * ((lookSensitivity >> 1) + 1));
+    /*
     if (gamekeydown[key_lookup])
         cmd->yangleturn += ((lookSensitivity >> 1) + 5);
     if (gamekeydown[key_lookdown])
         cmd->yangleturn -=  ((lookSensitivity >> 1) + 5);
-
+    */
     if (gamekeydown[key_up] || gamekeydown[key_forward])
     {
         forward += forwardmove[speed];

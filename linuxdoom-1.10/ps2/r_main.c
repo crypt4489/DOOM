@@ -780,6 +780,7 @@ void R_SetupFrame(player_t *player)
 
     viewz = player->viewz;
 
+/*
     // heretic code
 
     int tempcentery = (viewheight / 2) + (player->lookdir) * (screenblocks / 10);
@@ -793,8 +794,10 @@ void R_SetupFrame(player_t *player)
             int dy = abs(((i - centery) << FRACBITS) + FRACUNIT / 2);
             yslope[i] = FixedDiv((viewwidth << detailshift) / 2 * FRACUNIT, dy);
         }
-    }
 
+        //skytexturemid = (100 * FRACUNIT) +  (player->lookdir) * (screenblocks / 10);
+    }
+*/
     viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
     viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
 

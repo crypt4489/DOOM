@@ -69,8 +69,10 @@ line_t*		ceilingline;
 line_t*		spechit[MAXSPECIALCROSS];
 int		numspechit;
 
-
-
+fixed_t	shootatx;
+fixed_t	shootaty;
+fixed_t anglex;
+fixed_t angley;
 //
 // TELEPORT MOVE
 // 
@@ -963,6 +965,30 @@ boolean PTR_ShootTraverse (intercept_t* in)
 	    if	(li->backsector && li->backsector->ceilingpic == skyflatnum)
 		return false;		
 	}
+    /*
+
+        failed attempt to spawn puffs where the hitscan is aiming when it doesn't have something to hit
+        fixed_t distance = 0;
+        if (shootthing->player)
+        {
+            fixed_t tempx, tempy;
+            if (z <= li->frontsector->floorheight)
+            {
+                distance = abs((z - li->frontsector->floorheight) / aimslope);
+                tempx = shootthing->x + ((distance << 4) * (anglex >> 4));
+                tempy = shootthing->y + ((distance << 4) * (angley >> 4));
+            }
+            else if (z >= li->frontsector->ceilingheight)
+            {
+                distance = abs((li->frontsector->ceilingheight - z) / aimslope);
+                tempx = shootthing->x + ((distance << 4) * (anglex >> 4));
+                tempy = shootthing->y + ((distance << 4) * (angley >> 4));
+            }
+        }
+
+#include "log/ps_log.h"
+        DEBUGLOG("%d %d %d %d %d %d %d %d %d", x, y, z, shootthing->x, shootthing->y, shootz, aimslope, distance, li->frontsector->floorheight);
+*/
 
 	// Spawn bullet puffs.
 	P_SpawnPuff (x,y,z);
@@ -1067,20 +1093,20 @@ P_LineAttack
   fixed_t	slope,
   int		damage )
 {
-    fixed_t	x2;
-    fixed_t	y2;
-	
+
     angle >>= ANGLETOFINESHIFT;
     shootthing = t1;
     la_damage = damage;
-    x2 = t1->x + (distance>>FRACBITS)*finecosine[angle];
-    y2 = t1->y + (distance>>FRACBITS)*finesine[angle];
+    anglex = finecosine[angle];
+    angley = finesine[angle];
+    shootatx = t1->x + (distance>>FRACBITS)*anglex;
+    shootaty = t1->y + (distance>>FRACBITS)*angley;
     shootz = t1->z + (t1->height>>1) + 8*FRACUNIT;
     attackrange = distance;
     aimslope = slope;
 		
     P_PathTraverse ( t1->x, t1->y,
-		     x2, y2,
+		     shootatx, shootaty,
 		     PT_ADDLINES|PT_ADDTHINGS,
 		     PTR_ShootTraverse );
 }

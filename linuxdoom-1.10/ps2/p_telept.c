@@ -120,7 +120,6 @@ EV_Teleport
 		// don't move for a bit
 		if (thing->player) {
 		    thing->reactiontime = 18;	
-			thing->player->lookdir = 0;
 		}
 		thing->angle = m->angle;
 		thing->momx = thing->momy = thing->momz = 0;

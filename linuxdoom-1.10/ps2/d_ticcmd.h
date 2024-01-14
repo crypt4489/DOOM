@@ -42,7 +42,7 @@ typedef struct
     byte	chatchar;
     byte	buttons;
     char    upmove;
-    char    yangleturn;
+   // char    yangleturn;
 } ticcmd_t;
 
 

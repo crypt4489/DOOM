@@ -403,10 +403,14 @@ void R_DrawPlanes (void)
 	    //  by INVUL inverse mapping.
         // UPDATE: fixed to be the current colormap
         if (fixedcolormap)
+         {  
             dc_colormap = fixedcolormap;
-        else 
+        }
+        else
+        { 
             dc_colormap = colormaps;
-	    dc_texturemid = skytexturemid;
+        }
+        dc_texturemid = skytexturemid;
 	    for (x=pl->minx ; x <= pl->maxx ; x++)
 	    {
 		dc_yl = pl->top[x];

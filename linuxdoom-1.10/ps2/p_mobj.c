@@ -963,13 +963,13 @@ P_SpawnPlayerMissile
 	if (!linetarget)
 	{
 	    an = source->angle;
-	    slope = (source->player->lookdir << FRACBITS)/200;
+	   // slope = (source->player->lookdir << FRACBITS)/200;
 	}
     }
 		
     x = source->x;
     y = source->y;
-    z = source->z + 4*8*FRACUNIT + (source->player->lookdir << FRACBITS)/200;
+    z = source->z + 4*8*FRACUNIT; //+ (source->player->lookdir << FRACBITS)/200;
 	
     th = P_SpawnMobj (x,y,z, type);
 

@@ -169,7 +169,7 @@ typedef struct player_s
     boolean     foundsecretarea;
     Jumping     jump;
 
-    int         lookdir;
+    //int         lookdir;
 
 } player_t;
 

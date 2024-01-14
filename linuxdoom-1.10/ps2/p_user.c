@@ -223,13 +223,14 @@ void P_MovePlayer (player_t* player)
     {
 	P_SetMobjState (player->mo, S_PLAY_RUN1);
     }
-
+/*
 	player->lookdir += (cmd->yangleturn);
 
 	if (player->lookdir >= MAXLOOKDIR)
 		player->lookdir = MAXLOOKDIR;	
 	else if (player->lookdir <= MINLOOKDIR)
 		player->lookdir = MINLOOKDIR;
+*/
 }	
 
 

@@ -618,10 +618,10 @@ void P_BulletSlope (mobj_t*	mo)
 	    an -= 2<<26;
 	    bulletslope = P_AimLineAttack (mo, an, 16*64*FRACUNIT);
 	}
-    if (!linetarget)
+    /*if (!linetarget)
     {
         bulletslope = (mo->player->lookdir<<FRACBITS)/200;
-    }
+    }*/
     }
 }
 
