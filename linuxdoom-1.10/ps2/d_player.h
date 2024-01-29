@@ -80,6 +80,7 @@ typedef struct jumping_t
 {
     boolean jumping; //active jumping
     boolean jumpingdir; //direction of jumping, true=rising, false=falling
+    boolean jumped; //has completed in order to prevent double jumping
 } Jumping;
 //
 // Extended player object info: player_t

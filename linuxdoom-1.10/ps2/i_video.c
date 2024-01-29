@@ -84,7 +84,10 @@ static u32 old_pad = 0;
 static u32 new_pad;
 static u32 currData;
 struct padButtonStatus buttons;
-static u32 events_id[16] = {KEY_ESCAPE, KEY_SPEED, 0, KEY_PAUSE, KEY_UPARROW, KEY_RIGHTARROW, KEY_DOWNARROW, KEY_LEFTARROW, 0, KEY_FIRE, KEY_CYCLE_LEFT, KEY_CYCLE_RIGHT, KEY_BACKSPACE, KEY_SELECT, KEY_ENTER, KEY_TAB};
+static u32 events_id[16] = {KEY_ESCAPE, KEY_SPEED, 0, KEY_PAUSE, 
+							KEY_UPARROW, KEY_RIGHTARROW, KEY_DOWNARROW, KEY_LEFTARROW, 
+							0, KEY_FIRE, KEY_CYCLE_LEFT, KEY_CYCLE_RIGHT, 
+							KEY_BACKSPACE, KEY_SELECT, KEY_ENTER, KEY_TAB};
 static u8 JoyRHPv = 127;
 static u8 JoyLVPv = 127;
 static u8 JoyLHPv = 127;
@@ -95,7 +98,7 @@ static u32 upper = 200;
 void UpdatePad()
 {
 	s32 state = padGetState(port, 0);
-	event_t events[5];
+	event_t event;
 	if (state == PAD_STATE_DISCONN)
 	{
 		ERRORLOG("Pad(%d, %d) is disconnected", port, slot);
@@ -112,127 +115,126 @@ void UpdatePad()
 
 		if (buttons.rjoy_h <= lower && JoyRHPv > lower)
 		{
-			DEBUGLOG("LOOK LEFT PRESSED %d %d",
-					 buttons.rjoy_h, JoyRHPv);
-			events[0].type = ev_keydown;
-			events[0].data1 = KEY_LOOK_LEFT;
-			D_PostEvent(&events[0]);
+			//DEBUGLOG("LOOK LEFT PRESSED %d %d",
+			//		 buttons.rjoy_h, JoyRHPv);
+			event.type = ev_keydown;
+			event.data1 = KEY_LOOK_LEFT;
+			D_PostEvent(&event);
 		}
 		if (buttons.rjoy_h > lower && JoyRHPv <= lower)
 		{
-			DEBUGLOG("LOOK LEFT RELEASED %d %d",
-					 buttons.rjoy_h, JoyRHPv);
-			events[0].type = ev_keyup;
-			events[0].data1 = KEY_LOOK_LEFT;
-			D_PostEvent(&events[0]);
+			//DEBUGLOG("LOOK LEFT RELEASED %d %d",
+			//		 buttons.rjoy_h, JoyRHPv);
+			event.type = ev_keyup;
+			event.data1 = KEY_LOOK_LEFT;
+			D_PostEvent(&event);
 		}
 		if (buttons.rjoy_h >= upper && JoyRHPv < upper)
 		{
-			DEBUGLOG("LOOK RIGHT PRESSED %d %d",
-					 buttons.rjoy_h, JoyRHPv);
-			events[0].type = ev_keydown;
-			events[0].data1 = KEY_LOOK_RIGHT;
-			D_PostEvent(&events[0]);
+			//DEBUGLOG("LOOK RIGHT PRESSED %d %d",
+			//		 buttons.rjoy_h, JoyRHPv);
+			event.type = ev_keydown;
+			event.data1 = KEY_LOOK_RIGHT;
+			D_PostEvent(&event);
 		}
 		if (buttons.rjoy_h < upper && JoyRHPv >= upper)
 		{
-			DEBUGLOG("LOOK RIGHT RELEASED %d %d",
-					 buttons.rjoy_h, JoyRHPv);
-			events[1].type = ev_keyup;
-			events[1].data1 = KEY_LOOK_RIGHT;
-			D_PostEvent(&events[1]);
+			//DEBUGLOG("LOOK RIGHT RELEASED %d %d",
+			//		 buttons.rjoy_h, JoyRHPv);
+			event.type = ev_keyup;
+			event.data1 = KEY_LOOK_RIGHT;
+			D_PostEvent(&event);
 		}
 
 		if (buttons.rjoy_v <= lower && JoyRVPv > lower)
 		{
-			DEBUGLOG("LOOK UP PRESSED %d %d",
-					 buttons.rjoy_v, JoyRVPv);
-			events[0].type = ev_keydown;
-			events[0].data1 = KEY_LOOK_UP;
-			D_PostEvent(&events[0]);
+			//DEBUGLOG("LOOK UP PRESSED %d %d",
+			//		 buttons.rjoy_v, JoyRVPv);
+			event.type = ev_keydown;
+			event.data1 = KEY_LOOK_UP;
+			D_PostEvent(&event);
 		}
 		if (buttons.rjoy_v > lower && JoyRVPv <= lower)
 		{
-			DEBUGLOG("LOOK UP RELEASED %d %d",
-					 buttons.rjoy_h, JoyRVPv);
-			events[0].type = ev_keyup;
-			events[0].data1 = KEY_LOOK_UP;
-			D_PostEvent(&events[0]);
+			//DEBUGLOG("LOOK UP RELEASED %d %d",
+			//		 buttons.rjoy_h, JoyRVPv);
+			event.type = ev_keyup;
+			event.data1 = KEY_LOOK_UP;
+			D_PostEvent(&event);
 		}
 		if (buttons.rjoy_v >= upper && JoyRVPv < upper)
 		{
-			DEBUGLOG("LOOK DOWN PRESSED %d %d",
-					 buttons.rjoy_v, JoyRVPv);
-			events[0].type = ev_keydown;
-			events[0].data1 = KEY_LOOK_DOWN;
-			D_PostEvent(&events[0]);
+			//DEBUGLOG("LOOK DOWN PRESSED %d %d",
+			//		 buttons.rjoy_v, JoyRVPv);
+			event.type = ev_keydown;
+			event.data1 = KEY_LOOK_DOWN;
+			D_PostEvent(&event);
 		}
 		if (buttons.rjoy_v < upper && JoyRVPv >= upper)
 		{
-			DEBUGLOG("LOOK DOWN RELEASED %d %d",
-					 buttons.rjoy_v, JoyRVPv);
-			events[1].type = ev_keyup;
-			events[1].data1 = KEY_LOOK_DOWN;
-			D_PostEvent(&events[1]);
+			//DEBUGLOG("LOOK DOWN RELEASED %d %d",
+			//		 buttons.rjoy_v, JoyRVPv);
+			event.type = ev_keyup;
+			event.data1 = KEY_LOOK_DOWN;
+			D_PostEvent(&event);
 		}
 
 		if (buttons.ljoy_h <= lower && JoyLHPv > lower)
 		{
-			DEBUGLOG("LEFT PRESSED %d %d", buttons.ljoy_h, JoyLHPv);
-			events[1].type = ev_keydown;
-			events[1].data1 = KEY_MOVE_LEFT;
-			D_PostEvent(&events[1]);
+			//DEBUGLOG("LEFT PRESSED %d %d", buttons.ljoy_h, JoyLHPv);
+			event.type = ev_keydown;
+			event.data1 = KEY_MOVE_LEFT;
+			D_PostEvent(&event);
 		}
 		if (buttons.ljoy_h > lower && JoyLHPv <= lower)
 		{
-			DEBUGLOG("LEFT RELEASED %d %d", buttons.ljoy_h, JoyLHPv);
-			events[1].type = ev_keyup;
-			events[1].data1 = KEY_MOVE_LEFT;
-			D_PostEvent(&events[1]);
+			//DEBUGLOG("LEFT RELEASED %d %d", buttons.ljoy_h, JoyLHPv);
+			event.type = ev_keyup;
+			event.data1 = KEY_MOVE_LEFT;
+			D_PostEvent(&event);
 		}
 		if (buttons.ljoy_h >= upper && JoyLHPv < upper)
 		{
-			DEBUGLOG("RIGHT PRESSED %d %d", buttons.ljoy_h, JoyLHPv);
-			events[1].type = ev_keydown;
-			events[1].data1 = KEY_MOVE_RIGHT;
-			D_PostEvent(&events[1]);
+			//DEBUGLOG("RIGHT PRESSED %d %d", buttons.ljoy_h, JoyLHPv);
+			event.type = ev_keydown;
+			event.data1 = KEY_MOVE_RIGHT;
+			D_PostEvent(&event);
 		}
 		if (buttons.ljoy_h < upper && JoyLHPv >= upper)
 		{
-			DEBUGLOG("RIGHT RELEASED %d %d", buttons.ljoy_h, JoyLHPv);
-			events[1].type = ev_keyup;
-			events[1].data1 = KEY_MOVE_RIGHT;
-			D_PostEvent(&events[1]);
+			//DEBUGLOG("RIGHT RELEASED %d %d", buttons.ljoy_h, JoyLHPv);
+			event.type = ev_keyup;
+			event.data1 = KEY_MOVE_RIGHT;
+			D_PostEvent(&event);
 		}
 
 		if (buttons.ljoy_v <= lower && JoyLVPv > lower)
 		{
-
-			DEBUGLOG("UP PRESSED %d %d", buttons.ljoy_v, JoyLVPv);
-			events[2].type = ev_keydown;
-			events[2].data1 = KEY_UPARROW;
-			D_PostEvent(&events[2]);
+			//DEBUGLOG("UP PRESSED %d %d", buttons.ljoy_v, JoyLVPv);
+			event.type = ev_keydown;
+			event.data1 = KEY_UPARROW;
+			D_PostEvent(&event);
 		}
 		if (buttons.ljoy_v > lower && JoyLVPv <= lower)
 		{
-			DEBUGLOG("UP RELEASED %d %d", buttons.ljoy_v, JoyLVPv);
-			events[2].type = ev_keyup;
-			events[2].data1 = KEY_UPARROW;
-			D_PostEvent(&events[2]);
+			//DEBUGLOG("UP RELEASED %d %d", buttons.ljoy_v, JoyLVPv);
+			event.type = ev_keyup;
+			event.data1 = KEY_UPARROW;
+			D_PostEvent(&event);
 		}
 		if (buttons.ljoy_v >= upper && JoyLVPv < upper)
 		{
-			DEBUGLOG("DOWN PRESSED %d %d", buttons.ljoy_v, JoyLVPv);
-			events[2].type = ev_keydown;
-			events[2].data1 = KEY_DOWNARROW;
-			D_PostEvent(&events[2]);
+			//DEBUGLOG("DOWN PRESSED %d %d", buttons.ljoy_v, JoyLVPv);
+			event.type = ev_keydown;
+			event.data1 = KEY_DOWNARROW;
+			D_PostEvent(&event);
 		}
 		if (buttons.ljoy_v < upper && JoyLVPv >= upper)
 		{
-			DEBUGLOG("DOWN RELEASED %d %d", buttons.ljoy_v, JoyLVPv);
-			events[2].type = ev_keyup;
-			events[2].data1 = KEY_DOWNARROW;
-			D_PostEvent(&events[2]);
+			//DEBUGLOG("DOWN RELEASED %d %d", buttons.ljoy_v, JoyLVPv);
+			event.type = ev_keyup;
+			event.data1 = KEY_DOWNARROW;
+			D_PostEvent(&event);
 		}
 
 		JoyRVPv = buttons.rjoy_v;
@@ -248,16 +250,16 @@ void UpdatePad()
 		{
 			if (new_pad & padType)
 			{
-				events[3].type = ev_keydown;
-				events[3].data1 = events_id[i];
-				D_PostEvent(&events[3]);
+				event.type = ev_keydown;
+				event.data1 = events_id[i];
+				D_PostEvent(&event);
 			}
 			// release
 			if (!(currData & padType) && (old_pad & padType))
 			{
-				events[3].type = ev_keyup;
-				events[3].data1 = events_id[i];
-				D_PostEvent(&events[3]);
+				event.type = ev_keyup;
+				event.data1 = events_id[i];
+				D_PostEvent(&event);
 			}
 
 			padType <<= 1;

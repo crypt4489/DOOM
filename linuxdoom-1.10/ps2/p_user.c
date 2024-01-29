@@ -143,12 +143,17 @@ void P_CalcHeight (player_t* player)
 #include "log/ps_log.h"
 void P_JumpPlayer(player_t *player, char jumpcmd)
 {
-	if (!player->jump.jumping && jumpcmd)
+	if (!player->jump.jumping && jumpcmd && !player->jump.jumped)
 	{
 		player->jump.jumping = true;
 		player->jump.jumpingdir = true;
 		player->mo->momz = (10<<16);
 		return;
+	}
+
+	if (player->jump.jumped && !jumpcmd)
+	{
+		player->jump.jumped = false;
 	}
 
 	if(player->jump.jumping)
@@ -172,6 +177,7 @@ void P_JumpPlayer(player_t *player, char jumpcmd)
 			if (player->mo->floorz >= player->mo->z)
 			{	
 				player->jump.jumping = false;
+				player->jump.jumped = true;
 				return;
 			} else {
 				player->mo->momz-=FRACUNIT;

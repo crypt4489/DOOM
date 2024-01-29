@@ -225,12 +225,14 @@ static boolean I_CountSoundPlaying(int id, int count)
     {
       countl++;
     }
+
+    if (countl >= count)
+    {
+      return false;
+    }
   }
   
-  if (countl > count)
-  {
-    return false;
-  }
+  
   return true;
 }
 
