@@ -120,6 +120,9 @@ EV_Teleport
 		// don't move for a bit
 		if (thing->player) {
 		    thing->reactiontime = 18;	
+			thing->player->jump.jumping = false;
+			thing->player->jump.jumped = false;
+			thing->player->jump.jumpingdir = false;
 		}
 		thing->angle = m->angle;
 		thing->momx = thing->momy = thing->momz = 0;
