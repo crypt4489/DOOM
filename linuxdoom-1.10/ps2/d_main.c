@@ -355,7 +355,7 @@ void D_Display (void)
     wipe_EndScreen(0, 0, SCREENWIDTH, SCREENHEIGHT);
 
     wipestart = I_GetTime () - 1;
-
+	I_UpdateMusic(); 
     do
     {
 
@@ -364,7 +364,7 @@ void D_Display (void)
 		
 	    nowtime = I_GetTime ();
 	    tics = nowtime - wipestart;
-		
+		//I_UpdateMusic(); 
 	} while (tics <= 0);
 
 	wipestart = nowtime;
@@ -377,7 +377,9 @@ void D_Display (void)
 	
 	M_Drawer ();  
 	                         // menu is drawn even on top of wipes
-	I_FinishUpdate ();                      // page flip or blit buffer
+	I_FinishUpdate (); 
+	
+	I_UpdateMusic();                   // page flip or blit buffer
 	
     } while (!done);
 }
@@ -404,9 +406,8 @@ void D_DoomLoop (void)
 
     while (1)
     {
-		
-	// frame syncronous IO operations
-	I_StartFrame ();                
+		I_UpdateMusic();
+	// frame syncronous IO operations               
 	
 	// process one or more tics
 	if (singletics)

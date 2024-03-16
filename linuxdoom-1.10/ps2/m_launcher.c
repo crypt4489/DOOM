@@ -126,11 +126,11 @@ void M_LauncherRun(void)
         ClearScreen(g_Manager.targetBack, g_Manager.gs_context, 0, 0, 0, 255);
         DrawFullScreenQuad(halfh, halfw, background);
         PrintText(fontimage, wadlist[wadselect], 50, 200);
-        EndFrame();
+        EndFrame(1);
     }
 
     ClearScreen(g_Manager.targetBack, g_Manager.gs_context, 0, 0, 0, 255);
-    EndFrame();
+    EndFrame(1);
 }
 
 void M_LauncherDeinit(void)

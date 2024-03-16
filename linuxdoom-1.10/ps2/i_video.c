@@ -298,28 +298,36 @@ static Color colors[256];
 //
 // I_FinishUpdate
 //
+#include <graph.h>
+#include "i_sound.h"
 void I_FinishUpdate(void)
 {
-
-	byte *in = screens[0];
-	for (int i = 0; i < SCREENHEIGHT * SCREENWIDTH; i++)
-	{
-		int inColor = in[i];
-		int index = i * 4;
-		image->pixels[index + 0] = colors[inColor].r;
-		image->pixels[index + 1] = colors[inColor].g;
-		image->pixels[index + 2] = colors[inColor].b;
-	}
-
 	timeend = getTicks(g_Manager.timer);
-
 	if (timeend - timestart > 16)
 	{
+		byte *in = screens[0];
+		for (int i = 0; i < SCREENHEIGHT * SCREENWIDTH; i++)
+		{
+			int inColor = in[i];
+			int index = i * 4;
+			image->pixels[index + 0] = colors[inColor].r;
+			image->pixels[index + 1] = colors[inColor].g;
+			image->pixels[index + 2] = colors[inColor].b;
+		}
+
+		
 		ClearScreen(g_Manager.targetBack, g_Manager.gs_context, 0x00, 0xFF, 0x00, 0x00);
 		DrawFullScreenQuad(SKYDOOM_HEIGHT_HALF, SKYDOOM_WIDTH_HALF, image);
-		EndFrame();
+		EndFrame(0);
+		graph_start_vsync();
+		while(!(graph_check_vsync))
+		{
+			I_MusicUpdate();
+		}
+
 		timestart = timeend;
 	}
+	
 }
 
 //

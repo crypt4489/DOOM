@@ -23,6 +23,7 @@
 #ifndef __SOUNDS__
 #define __SOUNDS__
 
+#include "tml.h"
 
 //
 // SoundFX struct.
@@ -83,7 +84,11 @@ typedef struct
     
 } musicinfo_t;
 
-
+typedef struct musicps2_t
+{
+    int playing;
+    tml_message *midimessage;
+} MusicPS2;
 
 
 // the complete set of sound effects

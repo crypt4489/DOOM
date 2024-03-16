@@ -27,9 +27,11 @@ static const char
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-
+#include <sifrpc.h>
 #include <math.h>
-
+#include <loadfile.h>
+#include <iopheap.h>
+#include <kernel.h>
 #include <sys/time.h>
 #include <sys/types.h>
 
@@ -50,15 +52,22 @@ static const char
 
 #include "doomdef.h"
 
-#include <audsrv.h>
+#include "audsrvx.h"
 #include "audio/ps_sound.h"
+#include "log/ps_log.h"
+#include "tsf.h"
+
+extern tsf* gTsfInstance;
+tml_message *g_MidiMessage;
 // UNIX hack, to be removed.
 
-
+static int SIZEOFBLOCK;
+static float g_Msec;
+extern MusicPS2 playingMusic;
 // Get the interrupt. Set duration in millisecs.
 int I_SoundSetTimer(int duration_of_tick);
 void I_SoundDelTimer(void);
-
+static void I_RenderSamples(int size);
 
 // A quick hack to establish a protocol between
 // synchronous mix buffer updates and asynchronous
@@ -85,6 +94,48 @@ static int currentSampleIndex = 0;
 static int sampleToPlayIndex = 0;
 static int vagFileIndex = 0;
 
+static boolean buffer1Full, buffer2Full, tempBufferFull;
+static int bufferToFill;
+char dblBuffer[5*44100];
+static int writeCount;
+
+enum 
+{
+  BUFFER1 = 1,
+  BUFFER2 = 2,
+  BUFFERBOTH = 3
+};
+
+extern s32 sifTransferID;
+extern u32 *audioBuffer1;
+extern u32 *audioBuffer2;
+SifDmaTransfer_t dmaStruct;
+
+void I_TransferAudio()
+{
+  int bufferAssign = bufferToFill;
+  if (bufferToFill == BUFFER1)
+  {
+    dmaStruct.dest = audioBuffer1;
+    bufferToFill = BUFFER2;
+  }
+  else if (bufferToFill == BUFFER2)
+  {
+    dmaStruct.dest = audioBuffer2;
+    bufferToFill = BUFFER1;
+  }
+  else
+  { 
+    ERRORLOG("Never supposed to happen!")
+    return;
+  }
+  while(sifTransferID = SifSetDma(&dmaStruct, 1) == 0);
+  while(SifDmaStat(sifTransferID) == 0);
+  audsrv_transfer_to_buffer(bufferAssign);
+  DEBUGLOG("Transfer initiatied");
+}
+
+
 //
 // Safe ioctl, convenience.
 //
@@ -99,8 +150,6 @@ void myioctl(int fd,
 // This function loads the sound data from the WAD lump,
 //  for single sound.
 //
-
-#include "log/ps_log.h"
 
 void *
 getsfx(char *sfxname,
@@ -362,6 +411,14 @@ void I_InitSound()
   // Secure and configure sound device first.
   printf("I_InitSound: ");
 
+  tempBufferFull = false;
+  bufferToFill = BUFFER1;
+  buffer1Full = buffer2Full = false;
+
+  dmaStruct.src = dblBuffer;
+  dmaStruct.size = sizeof(dblBuffer);
+  dmaStruct.attr = 0;
+
   for (int i = 0; i < NUM_CHANNELS; i++)
   {
     samplestoplay[i] = NULL;
@@ -380,6 +437,7 @@ void I_InitSound()
       // Previously loaded already?
       S_sfx[i].data = S_sfx[i].link->data;
       lengths[i] = lengths[(S_sfx[i].link - S_sfx) / sizeof(sfxinfo_t)];
+      continue;
     }
     audsrv_load_adpcm(&samples[i], S_sfx[i].data, lengths[i]);
   }
@@ -403,9 +461,17 @@ static int musicdies = -1;
 
 void I_PlaySong(int handle, int looping)
 {
-  // UNUSED.
+  //audsrv_wait_audio(SIZEOFBLOCK);
+ // 
+  audsrv_stop_audio();
+  tempBufferFull = false;
+  writeCount = 0;
+  g_Msec = 0;
+  g_MidiMessage = playingMusic.midimessage;
   handle = looping = 0;
   musicdies = gametic + TICRATE * 30;
+  tsf_reset(gTsfInstance);
+  tsf_channel_set_bank_preset(gTsfInstance, 9, 128, 0);
 }
 
 void I_PauseSong(int handle)
@@ -478,3 +544,92 @@ void I_SoundDelTimer()
 {
 
 }
+
+void I_CheckBufferIOP(void)
+{
+    audsrv_buffer_check_status(&buffer1Full, &buffer2Full);
+    if (bufferToFill == BUFFERBOTH)
+    {
+      if (!buffer1Full)
+      {
+        bufferToFill = BUFFER1;
+      } 
+      else if (!buffer2Full)
+      {
+        bufferToFill = BUFFER2;
+      }
+      return;
+    }
+    if (buffer1Full && buffer2Full)
+      bufferToFill = BUFFERBOTH;
+}
+
+void I_UpdateMusic(void)
+{
+  
+  if (!g_MidiMessage)
+  {
+    return;
+  }
+
+  I_CheckBufferIOP();
+
+  if (bufferToFill == BUFFERBOTH)
+  {
+    return;
+  }
+
+  I_RenderSamples(SIZEOFBLOCK);
+}
+
+static void I_RenderSamples(int size)
+{
+ // float time1 = getTicks(g_Manager.timer);
+  s16 *out = (s16 *)(&sf2buffer[0]);
+  int SampleBlock = 0;
+  int SampleCount = size >> 1;
+  for (SampleBlock = SampleCount>>1; SampleCount; SampleCount -= SampleBlock, out += (SampleBlock))
+  {
+    // We progress the MIDI playback and then process TSF_RENDER_EFFECTSAMPLEBLOCK samples at once
+    if (SampleBlock > SampleCount)
+    {
+      SampleBlock = SampleCount;
+    }
+    // Loop through all MIDI messages which need to be played up until the current playback time
+    for (g_Msec += SampleBlock * (1000.0 / 22050.0); g_MidiMessage && g_Msec >= g_MidiMessage->time; g_MidiMessage = g_MidiMessage->next)
+    {
+      switch (g_MidiMessage->type)
+      {
+      case TML_PROGRAM_CHANGE: // channel program (preset) change (special handling for 10th MIDI channel with drums)
+        tsf_channel_set_presetnumber(gTsfInstance, g_MidiMessage->channel, g_MidiMessage->program, (g_MidiMessage->channel == 9));
+        break;
+      case TML_NOTE_ON: // play a note
+        tsf_channel_note_on(gTsfInstance, g_MidiMessage->channel, g_MidiMessage->key, g_MidiMessage->velocity / 127.0f);
+        break;
+      case TML_NOTE_OFF: // stop a note
+        tsf_channel_note_off(gTsfInstance, g_MidiMessage->channel, g_MidiMessage->key);
+        break;
+      case TML_PITCH_BEND: // pitch wheel modification
+        tsf_channel_set_pitchwheel(gTsfInstance, g_MidiMessage->channel, g_MidiMessage->pitch_bend);
+        break;
+      case TML_CONTROL_CHANGE: // MIDI controller messages
+        tsf_channel_midi_control(gTsfInstance, g_MidiMessage->channel, g_MidiMessage->control, g_MidiMessage->control_value);
+        break;
+      }
+      writeCount += SampleBlock * 2;
+    }
+    tsf_render_short(gTsfInstance, out, SampleBlock, 0);
+    if (!g_MidiMessage)
+    {
+      g_MidiMessage = playingMusic.midimessage;
+      g_Msec = 0;
+    }
+
+    if (writeCount > sizeof(dblBuffer))
+    {
+      writeCount = 0;
+      I_TransferAudio();
+    }
+  }
+}
+  
