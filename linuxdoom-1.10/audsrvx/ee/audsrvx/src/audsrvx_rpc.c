@@ -322,6 +322,29 @@ int audsrv_set_buffer_in_use(unsigned int buffer, unsigned int written)
 	return call_rpc_2(AUDSRV_SET_BUFFER_IN_USE, buffer, written);
 }
 
+int audsrv_transfer_notify(int buffer)
+{
+	return call_rpc_1(AUDSRV_NOTIFY_TRANSFER, buffer);
+}
+
+int audsrv_check_buffers(int *buffer1, int *buffer2)
+{
+	int ret;
+
+	WaitSema(completion_sema);
+
+	SifCallRpc(&cd0, AUDSRV_CHECK_BUFFERS_FULL, 0, sbuff, 0, sbuff, 12, NULL, NULL);
+
+	ret = sbuff[0];
+	*buffer1 = sbuff[1];
+	*buffer2 = sbuff[2];
+	SignalSema(completion_sema);
+
+	set_error(ret);
+
+	return ret;
+}
+
 static void *audsrv_ee_rpc_handler(int fnum, void *buffer, int len)
 {
 	(void)len;

@@ -131,7 +131,7 @@ void I_TransferAudio()
   }
   while(sifTransferID = SifSetDma(&dmaStruct, 1) == 0);
   while(SifDmaStat(sifTransferID) == 0);
-  audsrv_transfer_to_buffer(bufferAssign);
+  audsrv_transfer_notify(bufferAssign);
   DEBUGLOG("Transfer initiatied");
 }
 
@@ -547,7 +547,7 @@ void I_SoundDelTimer()
 
 void I_CheckBufferIOP(void)
 {
-    audsrv_buffer_check_status(&buffer1Full, &buffer2Full);
+    audsrv_check_buffers(&buffer1Full, &buffer2Full);
     if (bufferToFill == BUFFERBOTH)
     {
       if (!buffer1Full)

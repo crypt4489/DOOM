@@ -89,9 +89,13 @@ static unsigned int buffer1Size;
 static unsigned int buffer2Size;
 static unsigned int buffer1Written;
 static unsigned int buffer2Written;
+static char *bufferPlaying;
 
-#define BUFFER1 0
-#define BUFFER2 1
+enum 
+{
+	BUFFER1 = 1,
+	BUFFER2 = 2,
+};
 
 /** exports table */
 extern struct irx_export_table _exp_audsrv;
@@ -160,13 +164,46 @@ int audsrv_set_buffers(unsigned int *ptr1, unsigned int *ptr2,
 
 int audsrv_set_buffer_in_use(unsigned int buffer, unsigned int written)
 {
+	/*
 	if (buffer)
 		buffer2Written = written;
 	else
 		buffer1Written = written;
 	buffer_in_use = buffer;
-	printf("set buffer in use and size %d %d\n", buffer_in_use, written);
+	printf("set buffer in use and size %d %d\n", buffer_in_use, written); 
+	*/
+	return AUDSRV_ERR_NOERROR; 
+}
+
+int audsrv_transfer_notify(int buffer)
+{
+	if (buffer == BUFFER1)
+	{
+		buffer1Written = 1;
+	} 
+	else if (buffer == BUFFER2)
+	{
+		buffer2Written = 1;
+	}
+	else 
+	{
+		return AUDSRV_ERR_ARGS;
+	}
+	printf("buffers are full %d %d\n", buffer1Written, buffer2Written);
 	return AUDSRV_ERR_NOERROR;
+}
+
+int audsrv_check_buffers()
+{
+	int ret = 0;
+	
+	if (buffer1Written)
+		ret |= 0x01;
+	if (buffer2Written)
+		ret |= 0x02;
+
+	printf("check buffers %d\n", ret);
+	return ret;
 }
 
 /** Stops all audio playing

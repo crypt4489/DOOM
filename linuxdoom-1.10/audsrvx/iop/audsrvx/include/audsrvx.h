@@ -56,6 +56,8 @@
 
 #define AUDSRV_SET_BUFFERS          0x001e
 #define AUDSRV_SET_BUFFER_IN_USE    0x001f
+#define AUDSRV_CHECK_BUFFERS_FULL   0x0020
+#define AUDSRV_NOTIFY_TRANSFER      0x0021
 
 #define AUDSRV_FILLBUF_CALLBACK     0x0001
 #define AUDSRV_CDDA_CALLBACK        0x0002
@@ -112,6 +114,8 @@ int free_sample(u32 id);
 int audsrv_set_buffer_in_use(u32 buffer, u32 written);
 int audsrv_set_buffers(u32 *ptr1, u32 *ptr2, 
                        u32 size1, u32 size2);
+int audsrv_transfer_notify(int buffer);
+int audsrv_check_buffers();
 
 
 #define audsrv_IMPORTS_start DECLARE_IMPORT_TABLE(audsrv, 1, 4)
@@ -149,5 +153,9 @@ int audsrv_set_buffers(u32 *ptr1, u32 *ptr2,
 #define I_audsrv_adpcm_set_volume  DECLARE_IMPORT(27, audsrv_adpcm_set_volume)
 #define I_audsrv_available         DECLARE_IMPORT(28, audsrv_available)
 #define I_audsrv_queued            DECLARE_IMPORT(29, audsrv_queued)
+#define I_audsrv_set_buffers       DECLARE_IMPORT(30, audsrv_set_buffers)
+#define I_audsrv_set_buffer_in_use DECLARE_IMPORT(31, audsrv_set_buffer_in_use)
+#define I_audsrv_transfer_notify   DECLARE_IMPORT(32, audsrv_transfer_notify)
+#define I_audsrv_check_buffers     DECLARE_IMPORT(33, audsrv_check_buffers)
 
 #endif /* __AUDSRV_H__ */

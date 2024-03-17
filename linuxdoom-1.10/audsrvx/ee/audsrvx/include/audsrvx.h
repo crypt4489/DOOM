@@ -288,6 +288,10 @@ int audsrv_set_buffers(unsigned int *ptr1, unsigned int *ptr2,
 
 int audsrv_set_buffer_in_use(unsigned int buffer, unsigned int written);
 
+int audsrv_transfer_notify(int buffer);
+
+int audsrv_check_buffers(int *buffer1, int *buffer2);
+
 #ifdef __cplusplus
 }
 #endif
