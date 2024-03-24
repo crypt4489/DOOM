@@ -82,14 +82,17 @@ static u8 core1_buf[0x1000] __attribute__((aligned (16)));
 static short rendered_left [ 512 ];
 static short rendered_right[ 512 ];
 
-static unsigned int *buffer1;
-static unsigned int *buffer2;
-static unsigned int buffer_in_use;
-static unsigned int buffer1Size;
-static unsigned int buffer2Size;
-static unsigned int buffer1Written;
-static unsigned int buffer2Written;
-static char *bufferPlaying;
+static char *buffer1;
+static char *buffer2;
+static u32 buffer_in_use = 0;
+static u32 buffer1_max_size = 0;
+static u32 buffer2_max_size = 0;
+static u32 buffer1_data_size = 0;
+static u32 buffer2_data_size = 0;
+static u32 buffer1_has_data = 0;
+static u32 buffer2_has_data = 0;
+static u32 buffer_reset = 0;
+
 
 enum 
 {
@@ -151,59 +154,66 @@ static void update_volume()
  *
  * 
  */
-int audsrv_set_buffers(unsigned int *ptr1, unsigned int *ptr2, 
-					   unsigned int size1, unsigned int size2)
+int audsrv_set_buffers(char *ptr1, char *ptr2, 
+					   u32 size1, u32 size2)
 {
-	buffer1 = ptr1;
-	buffer2 = ptr2;
-	buffer1Size = size1;
-	buffer2Size = size2;
-	printf("set buffers and size %d %d\n", buffer1Size, buffer2Size);
+	printf("iop no workie %d %d\n", ptr1, ptr2);
+	buffer1 = ptr1+8;
+	buffer2 = ptr2+8;
+	buffer1_max_size = size1;
+	buffer2_max_size = size2;
+	printf("set buffers and size %d %d\n", buffer1_max_size, buffer2_max_size);
 	return AUDSRV_ERR_NOERROR;
 }
 
-int audsrv_set_buffer_in_use(unsigned int buffer, unsigned int written)
-{
-	/*
-	if (buffer)
-		buffer2Written = written;
-	else
-		buffer1Written = written;
-	buffer_in_use = buffer;
-	printf("set buffer in use and size %d %d\n", buffer_in_use, written); 
-	*/
-	return AUDSRV_ERR_NOERROR; 
-}
 
-int audsrv_transfer_notify(int buffer)
+int audsrv_transfer_notify(int buffer, int size)
 {
 	if (buffer == BUFFER1)
 	{
-		buffer1Written = 1;
+		buffer1_has_data = 1;
+		buffer1_data_size = size;
 	} 
 	else if (buffer == BUFFER2)
 	{
-		buffer2Written = 1;
+		buffer2_has_data = 1;
+		buffer2_data_size = size;
 	}
 	else 
 	{
 		return AUDSRV_ERR_ARGS;
 	}
-	printf("buffers are full %d %d\n", buffer1Written, buffer2Written);
+
+	if (playing == 0)
+	{
+		/* audio is always playing, just change the volume */
+		playing = 1;
+		update_volume();
+	}
+	//printf("buffers are full %d %d\n", buffer1_has_data, buffer2_has_data);
 	return AUDSRV_ERR_NOERROR;
 }
 
-int audsrv_check_buffers()
+int audsrv_buffers_status()
 {
 	int ret = 0;
 	
-	if (buffer1Written)
+	if (buffer1_has_data)
 		ret |= 0x01;
-	if (buffer2Written)
+	if (buffer2_has_data)
 		ret |= 0x02;
 
-	printf("check buffers %d\n", ret);
+	//printf("check buffers %d\n", ret);
 	return ret;
+}
+
+int audsrv_reset_buffers()
+{
+	buffer1_has_data = buffer2_has_data = 0;
+	buffer1_data_size = buffer2_data_size = 0;
+	buffer_reset = 1;
+	playing = 0;
+	return AUDSRV_ERR_NOERROR;
 }
 
 /** Stops all audio playing
@@ -507,6 +517,8 @@ static void play_thread(void *arg)
 	int step;
 	struct upsample_t up;
 	upsampler_t upsampler = NULL;
+	char *source = (char *)buffer1;
+	u32 *buffer_size = &buffer1_data_size;
 
 	(void)arg;
 
@@ -515,26 +527,48 @@ static void play_thread(void *arg)
 	{
 		int block;
 		u8 *bufptr;
-		int available;
+	//	int available;
+
+		if (buffer_reset)
+		{
+			buffer_reset = 0;
+			buffer_in_use = 0;
+			source = (char *)buffer1;
+			buffer_size = &buffer1_data_size;
+			readpos = 0;
+		}
 
 		if (format_changed)
 		{
 			upsampler = find_upsampler(core1_freq, core1_bits, core1_channels);
 			format_changed = 0;
 		}
-
+		//printf("here doing whatever %d\n", playing);
 		if (playing && upsampler != NULL)
 		{
-			up.src = (const unsigned char *)ringbuf + readpos;
+			//printf("%d %d %d\n", readpos, *bufferSize, buffer_in_use);
+			up.src = (const unsigned char *)source + readpos;
 			up.left = rendered_left;
 			up.right = rendered_right;
 			step = upsampler(&up);
 
 			readpos = readpos + step;
-			if (readpos >= ringbuf_size)
+			if (readpos >= *buffer_size)
 			{
-				/* wrap around */
 				readpos = 0;
+				if (buffer_in_use)
+				{
+					buffer_in_use = 0;
+					source = (char *)buffer1;
+					buffer_size = &buffer1_data_size;
+					buffer2_has_data = 0;
+				} else {
+					buffer_in_use = 1;
+					source = (char *)buffer2;
+					buffer_size = &buffer2_data_size;
+					buffer1_has_data = 0;
+				} 
+
 			}
 		}
 		else
@@ -562,20 +596,20 @@ static void play_thread(void *arg)
 
 		CpuResumeIntr(intr_state);
 
-		available = audsrv_available();
-		if (available >= (ringbuf_size / 10))
-		{
+		//available = audsrv_available();
+		//if (available >= (ringbuf_size / 10))
+		//{
 			/* arbitrarily selected ringbuf_size / 10, to reduce
 			 * number of semaphores signalled.
 			 */
-			SignalSema(queue_sema);
-		}
+			//SignalSema(queue_sema);
+		//}
 
-		if (fillbuf_threshold > 0 && available >= fillbuf_threshold)
-		{
+		//if (fillbuf_threshold > 0 && available >= fillbuf_threshold)
+		//{
 			/* EE client requested a callback */
-			call_client_callback(AUDSRV_FILLBUF_CALLBACK);
-		}
+		//	call_client_callback(AUDSRV_FILLBUF_CALLBACK);
+		//}
 
 		//printf("avaiable: %d, queued: %d\n", available, ringbuf_size - available);
 	}

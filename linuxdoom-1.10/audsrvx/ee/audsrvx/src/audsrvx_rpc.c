@@ -256,6 +256,11 @@ int audsrv_play_audio(const char *chunk, int bytes)
 	int maxcopy;
 	int sent = 0;
 
+	if (!bytes)
+	{
+		SifCallRpc(&cd0, AUDSRV_PLAY_AUDIO, 0, sbuff, 0, sbuff, 1*4, NULL, NULL);
+	}
+
 	set_error(AUDSRV_ERR_NOERROR);
 	maxcopy = sizeof(sbuff) - sizeof(int);
 	while (bytes > 0)
@@ -296,15 +301,15 @@ int audsrv_stop_audio()
 	return ret;
 }
 
-int audsrv_set_buffers(unsigned int *ptr1, unsigned int *ptr2, 
+int audsrv_set_buffers(char *ptr1, char *ptr2, 
 					   unsigned int size1, unsigned int size2)
 {
 	int ret;
 
 	WaitSema(completion_sema);
 
-	sbuff[0] = (unsigned int)ptr1;
-	sbuff[1] = (unsigned int)ptr2;
+	sbuff[0] = (int)ptr1;
+	sbuff[1] = (int)ptr2;
 	sbuff[2] = size1;
 	sbuff[3] = size2;
 	SifCallRpc(&cd0, AUDSRV_SET_BUFFERS, 0, sbuff, 16, sbuff, 4, NULL, NULL);
@@ -317,14 +322,10 @@ int audsrv_set_buffers(unsigned int *ptr1, unsigned int *ptr2,
 	return ret;
 }
 
-int audsrv_set_buffer_in_use(unsigned int buffer, unsigned int written)
-{
-	return call_rpc_2(AUDSRV_SET_BUFFER_IN_USE, buffer, written);
-}
 
-int audsrv_transfer_notify(int buffer)
+int audsrv_transfer_notify(int buffer, int size)
 {
-	return call_rpc_1(AUDSRV_NOTIFY_TRANSFER, buffer);
+	return call_rpc_2(AUDSRV_NOTIFY_TRANSFER, buffer, size);
 }
 
 int audsrv_check_buffers(int *buffer1, int *buffer2)
@@ -333,7 +334,7 @@ int audsrv_check_buffers(int *buffer1, int *buffer2)
 
 	WaitSema(completion_sema);
 
-	SifCallRpc(&cd0, AUDSRV_CHECK_BUFFERS_FULL, 0, sbuff, 0, sbuff, 12, NULL, NULL);
+	SifCallRpc(&cd0, AUDSRV_BUFFER_STATUS, 0, sbuff, 0, sbuff, 12, NULL, NULL);
 
 	ret = sbuff[0];
 	*buffer1 = sbuff[1];
@@ -343,6 +344,11 @@ int audsrv_check_buffers(int *buffer1, int *buffer2)
 	set_error(ret);
 
 	return ret;
+}
+
+int audsrv_reset_buffers()
+{
+	return call_rpc_1(AUDSRV_RESET_BUFFERS, 0);
 }
 
 static void *audsrv_ee_rpc_handler(int fnum, void *buffer, int len)

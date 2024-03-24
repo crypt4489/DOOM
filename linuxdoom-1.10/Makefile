@@ -4,9 +4,9 @@ SRC_DIR := ./ps2
 TARGET_DIR := ./bin
 WIN_DIR := /mnt/c/Users/dflet/Desktop/
 PS2_LIB_DIR := /home/dfletcher/PS2DEMO/PS2-Development/inc
-AUDSRVX := ./audsrv
+AUDSRVX := ./audsrvx
 AUDSRVX_EE := $(AUDSRVX)/ee/audsrvx/
-AUDSRVX_IOP := $(AUDSRVX)/iop/audsrv/
+AUDSRVX_IOP := $(AUDSRVX)/iop/audsrvx/
 AUDSRVX_LIB := $(AUDSRVX_EE)/lib/
 AUDSRVX_IRX := $(AUDSRVX_IOP)/irx/
 
@@ -53,7 +53,7 @@ update_win:
 	cp $(ISO_TGT) $(WIN_DIR)
 
 disc:
-	mkisofs -l -o $(ISO_TGT) $(TARGET_DIR)/$(EE_BIN) SYSTEM.CNF $(IRX_DIR) $(AUDSRVX_IRX)/audsrv.irx doom1.wad doom2.wad gzdoom.sf2 background.png DefaultFont.bmp DefaultFontData.dat
+	mkisofs -l -o $(ISO_TGT) $(TARGET_DIR)/$(EE_BIN) SYSTEM.CNF $(IRX_DIR) $(AUDSRVX_IRX)audsrvx.irx doom1.wad doom2.wad gzdoom.sf2 background.png DefaultFont.bmp DefaultFontData.dat
 
 irx:
 	mv $(IOP_MOD) "$(IRX_DIR)"

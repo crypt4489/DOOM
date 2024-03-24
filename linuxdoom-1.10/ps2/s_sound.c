@@ -572,7 +572,7 @@ void S_SetMusicVolume(int volume)
                 volume);
     }
 
-    I_SetMusicVolume(127);
+  //  I_SetMusicVolume(127);
     I_SetMusicVolume(volume);
     snd_MusicVolume = volume;
 }
@@ -692,8 +692,6 @@ void S_ChangeMusic(int musicnum,
     InsertCache(musicnum, playingMusic.midimessage);
     // play it
     I_PlaySong(music->handle, looping);
-
-   
 }
 
 void S_StopMusic(void)

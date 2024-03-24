@@ -21,8 +21,8 @@
 #include <libsd.h>
 #include <sysclib.h>
 
-#include <audsrv.h>
-#include "audsrv_internal.h"
+#include "audsrvx.h"
+#include "audsrvx_internal.h"
 #include "common.h"
 #include "rpc_server.h"
 #include "spu.h"

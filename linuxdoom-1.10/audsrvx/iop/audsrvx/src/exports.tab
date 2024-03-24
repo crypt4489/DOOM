@@ -30,9 +30,9 @@ DECLARE_EXPORT_TABLE(audsrv, 1, 4)
 	DECLARE_EXPORT(audsrv_available)
 	DECLARE_EXPORT(audsrv_queued)
 /* 30 */ DECLARE_EXPORT(audsrv_set_buffers)
-	DECLARE_EXPORT(audsrv_set_buffer_in_use)
 	DECLARE_EXPORT(audsrv_transfer_notify)
-	DECLARE_EXPORT(audsrv_check_buffers)
+	DECLARE_EXPORT(audsrv_buffers_status)
+    DECLARE_EXPORT(audsrv_reset_buffers)
 END_EXPORT_TABLE
 
 void _retonly() {}

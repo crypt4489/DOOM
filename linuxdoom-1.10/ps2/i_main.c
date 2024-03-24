@@ -45,10 +45,12 @@ u32 SKYDOOM_WIDTH = 640;
 
 tsf* gTsfInstance = NULL;
 
-u32 *audioBuffer1 = NULL;
-u32 *audioBuffer2 = NULL;
+char *audioBuffer1 = NULL;
+char *audioBuffer2 = NULL;
 s32 sifTransferID = -1;
 boolean bufferToWrite, bufferToRead;
+
+#define BUFFERSIZE (44100 * 5) + 400
 int
 main
 ( int		argc,
@@ -62,7 +64,7 @@ main
     printf("libsd loadmodule %d\n", ret);
 
     printf("loading audsrv\n");
-    ret = SifLoadModule("cdrom0:\\AUDSRV.IRX", 0, NULL);
+    ret = SifLoadModule("cdrom0:\\AUDSRVX.IRX", 0, NULL);
     printf("audsrv loadmodule %d\n", ret);
 
     ret = audsrv_init();
@@ -76,17 +78,19 @@ main
     
     audsrv_set_format(&audio);
 
-    audsrv_set_volume(MAX_VOLUME);
+    audsrv_set_volume(50);
 
-    audioBuffer1 = (u32*)SifAllocIopHeap(44100 * 5);
-    audioBuffer2 = (u32*)SifAllocIopHeap(44100 * 5);
+    audioBuffer1 = (char*)SifAllocIopHeap(BUFFERSIZE+8);
+    audioBuffer2 = (char*)SifAllocIopHeap(BUFFERSIZE+8);
 
     if (!audioBuffer1 || !audioBuffer2)
     {
         ERRORLOG("Cannot allocate audio buffers");
     }
 
-    audsrv_set_buffers(audioBuffer1, audioBuffer2, 44100*5, 44100*5);
+
+    DEBUGLOG("%d %d", audioBuffer1, audioBuffer2);
+    audsrv_set_buffers(audioBuffer1, audioBuffer2, BUFFERSIZE, BUFFERSIZE);
 
     u32 sf2Size = 0;
 

@@ -165,22 +165,22 @@ static void *rpc_command(int func, unsigned *data, int size)
 		break;
 
 		case AUDSRV_SET_BUFFERS: 
-		ret = audsrv_set_buffers((u32*)data[0], (u32*)data[1], data[2], data[3]);
+		ret = audsrv_set_buffers((char*)data[0], (char*)data[1], data[2], data[3]);
 		break;
 
-		case AUDSRV_SET_BUFFER_IN_USE:
-		ret = audsrv_set_buffer_in_use(data[0], data[1]);
-		break;
-		case AUDSRV_CHECK_BUFFERS_FULL:
-		ret =  audsrv_check_buffers();
+		case AUDSRV_BUFFER_STATUS:
+		ret =  audsrv_buffers_status();
 		if (ret & 0x01) data[1] = 1;
 		else data[1] = 0;
 		if (ret & 0x02) data[2] = 1;
-		else data[2] = 1;
+		else data[2] = 0;
 		ret = AUDSRV_ERR_NOERROR;
 		break;
 		case AUDSRV_NOTIFY_TRANSFER:
-		ret = audsrv_transfer_notify(data[1]);
+		ret = audsrv_transfer_notify(data[0], data[1]);
+		break;
+		case AUDSRV_RESET_BUFFERS:
+		ret = audsrv_reset_buffers();
 		break;
 		default:
 		ret = -1;

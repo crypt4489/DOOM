@@ -94,9 +94,9 @@ static int currentSampleIndex = 0;
 static int sampleToPlayIndex = 0;
 static int vagFileIndex = 0;
 
-static boolean buffer1Full, buffer2Full, tempBufferFull;
+static int buffer1Full, buffer2Full; 
 static int bufferToFill;
-char dblBuffer[5*44100];
+char dblBuffer[(5*44100)+400];
 static int writeCount;
 
 enum 
@@ -107,8 +107,8 @@ enum
 };
 
 extern s32 sifTransferID;
-extern u32 *audioBuffer1;
-extern u32 *audioBuffer2;
+extern char *audioBuffer1;
+extern char *audioBuffer2;
 SifDmaTransfer_t dmaStruct;
 
 void I_TransferAudio()
@@ -116,23 +116,20 @@ void I_TransferAudio()
   int bufferAssign = bufferToFill;
   if (bufferToFill == BUFFER1)
   {
-    dmaStruct.dest = audioBuffer1;
-    bufferToFill = BUFFER2;
+    dmaStruct.dest = (void*)audioBuffer1;
   }
   else if (bufferToFill == BUFFER2)
   {
-    dmaStruct.dest = audioBuffer2;
-    bufferToFill = BUFFER1;
+    dmaStruct.dest = (void*)audioBuffer2;
   }
   else
   { 
-    ERRORLOG("Never supposed to happen!")
+    ERRORLOG("Never supposed to happen! %d", bufferToFill);
     return;
   }
-  while(sifTransferID = SifSetDma(&dmaStruct, 1) == 0);
+  while((sifTransferID = SifSetDma(&dmaStruct, 1)) == 0);
   while(SifDmaStat(sifTransferID) == 0);
-  audsrv_transfer_notify(bufferAssign);
-  DEBUGLOG("Transfer initiatied");
+  audsrv_transfer_notify(bufferAssign, writeCount);
 }
 
 
@@ -250,6 +247,8 @@ void I_SetMusicVolume(int volume)
   snd_MusicVolume = volume;
   // Now set volume on output device.
   // Whatever( snd_MusciVolume );
+  audsrv_set_volume(MAX_VOLUME * ((float)volume/15));
+  
 }
 
 //
@@ -411,11 +410,10 @@ void I_InitSound()
   // Secure and configure sound device first.
   printf("I_InitSound: ");
 
-  tempBufferFull = false;
   bufferToFill = BUFFER1;
   buffer1Full = buffer2Full = false;
 
-  dmaStruct.src = dblBuffer;
+  dmaStruct.src = (void*)dblBuffer;
   dmaStruct.size = sizeof(dblBuffer);
   dmaStruct.attr = 0;
 
@@ -461,10 +459,8 @@ static int musicdies = -1;
 
 void I_PlaySong(int handle, int looping)
 {
-  //audsrv_wait_audio(SIZEOFBLOCK);
- // 
-  audsrv_stop_audio();
-  tempBufferFull = false;
+  audsrv_reset_buffers();
+  bufferToFill = BUFFER1;
   writeCount = 0;
   g_Msec = 0;
   g_MidiMessage = playingMusic.midimessage;
@@ -472,6 +468,9 @@ void I_PlaySong(int handle, int looping)
   musicdies = gametic + TICRATE * 30;
   tsf_reset(gTsfInstance);
   tsf_channel_set_bank_preset(gTsfInstance, 9, 128, 0);
+
+  for (int i = 0; i<sizeof(dblBuffer); i+=(5*470))
+    I_RenderSamples(5*470);
 }
 
 void I_PauseSong(int handle)
@@ -548,6 +547,7 @@ void I_SoundDelTimer()
 void I_CheckBufferIOP(void)
 {
     audsrv_check_buffers(&buffer1Full, &buffer2Full);
+    //DEBUGLOG("%d %d", buffer1Full, buffer2Full);
     if (bufferToFill == BUFFERBOTH)
     {
       if (!buffer1Full)
@@ -558,10 +558,26 @@ void I_CheckBufferIOP(void)
       {
         bufferToFill = BUFFER2;
       }
+
+      if (bufferToFill != BUFFERBOTH)
+      {
+        I_TransferAudio();
+        writeCount = 0;
+      }
       return;
     }
+
     if (buffer1Full && buffer2Full)
       bufferToFill = BUFFERBOTH;
+
+    else if (buffer1Full && bufferToFill == BUFFER1)
+      bufferToFill = BUFFER2;
+
+    else if (buffer2Full && bufferToFill == BUFFER2)
+      bufferToFill = BUFFER1;
+    
+
+    
 }
 
 void I_UpdateMusic(void)
@@ -574,21 +590,20 @@ void I_UpdateMusic(void)
 
   I_CheckBufferIOP();
 
-  if (bufferToFill == BUFFERBOTH)
+  if (bufferToFill == BUFFERBOTH && writeCount >= sizeof(dblBuffer))
   {
     return;
   }
-
-  I_RenderSamples(SIZEOFBLOCK);
+  //DEBUGLOG("Rendering...");
+  I_RenderSamples(470 * 5);
 }
 
 static void I_RenderSamples(int size)
 {
- // float time1 = getTicks(g_Manager.timer);
-  s16 *out = (s16 *)(&sf2buffer[0]);
+  s16 *out = (s16 *)(&dblBuffer[writeCount]); 
   int SampleBlock = 0;
   int SampleCount = size >> 1;
-  for (SampleBlock = SampleCount>>1; SampleCount; SampleCount -= SampleBlock, out += (SampleBlock))
+  for (SampleBlock = SampleCount >> 1; SampleCount; SampleCount -= SampleBlock, out += (SampleBlock))
   {
     // We progress the MIDI playback and then process TSF_RENDER_EFFECTSAMPLEBLOCK samples at once
     if (SampleBlock > SampleCount)
@@ -616,20 +631,21 @@ static void I_RenderSamples(int size)
         tsf_channel_midi_control(gTsfInstance, g_MidiMessage->channel, g_MidiMessage->control, g_MidiMessage->control_value);
         break;
       }
-      writeCount += SampleBlock * 2;
+      
     }
+    writeCount += SampleBlock * 2; 
     tsf_render_short(gTsfInstance, out, SampleBlock, 0);
     if (!g_MidiMessage)
     {
       g_MidiMessage = playingMusic.midimessage;
       g_Msec = 0;
     }
+  }
 
-    if (writeCount > sizeof(dblBuffer))
-    {
-      writeCount = 0;
-      I_TransferAudio();
-    }
+  if (writeCount >= sizeof(dblBuffer) && bufferToFill != BUFFERBOTH)
+  {
+    I_TransferAudio();
+    writeCount = 0;
   }
 }
   

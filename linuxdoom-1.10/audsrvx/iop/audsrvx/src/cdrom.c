@@ -23,7 +23,7 @@
 #include <cdvdman.h>
 #include <sysclib.h>
 
-#include <audsrv.h>
+#include "audsrvx.h"
 #include "cdrom.h"
 #include "common.h"
 #include "rpc_server.h"

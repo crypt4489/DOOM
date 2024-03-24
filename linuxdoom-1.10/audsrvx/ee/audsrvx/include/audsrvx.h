@@ -283,14 +283,14 @@ int audsrv_available();
  */
 int audsrv_queued();
 
-int audsrv_set_buffers(unsigned int *ptr1, unsigned int *ptr2, 
+int audsrv_set_buffers(char *ptr1, char *ptr2, 
 					   unsigned int size1, unsigned int size2);
 
-int audsrv_set_buffer_in_use(unsigned int buffer, unsigned int written);
-
-int audsrv_transfer_notify(int buffer);
+int audsrv_transfer_notify(int buffer, int size);
 
 int audsrv_check_buffers(int *buffer1, int *buffer2);
+
+int audsrv_reset_buffers();
 
 #ifdef __cplusplus
 }
