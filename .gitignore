@@ -1,2 +1,10 @@
 # Ignore
 linuxdoom-1.10/objs/*.o
+linuxdoom-1.10/audsrvx/iop/audsrvx/obj/
+linuxdoom-1.10/audsrvx/iop/audsrvx/irx/
+linuxdoom-1.10/audsrvx/ee/audsrvx/lib/
+linuxdoom-1.10/audsrvx/ee/audsrvx/obj/
+linuxdoom-1.10/*.iso
+linuxdoom-1.10/*.wad
+linuxdoom-1.10/bin/
+linuxdoom-1.10/.vscode/
