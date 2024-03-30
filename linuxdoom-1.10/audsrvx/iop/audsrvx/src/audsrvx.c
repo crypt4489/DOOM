@@ -54,11 +54,6 @@ static int initialized = 0;
 static int playing = 0;
 
 
-/* ring buffer properties */
-/** ring buffer itself */
-static char ringbuf[20480];
-/** size of ring buffer in bytes */
-static int ringbuf_size = sizeof(ringbuf);
 /** reading head pointer */
 static int readpos;
 /** writing head pointer */
@@ -85,8 +80,6 @@ static short rendered_right[ 512 ];
 static char *buffer1;
 static char *buffer2;
 static u32 buffer_in_use = 0;
-static u32 buffer1_max_size = 0;
-static u32 buffer2_max_size = 0;
 static u32 buffer1_data_size = 0;
 static u32 buffer2_data_size = 0;
 static u32 buffer1_has_data = 0;
@@ -159,9 +152,8 @@ int audsrv_set_buffers(char *ptr1, char *ptr2,
 {
 	buffer1 = ptr1;
 	buffer2 = ptr2;
-	buffer1_max_size = size1;
-	buffer2_max_size = size2;
-	printf("set buffers and size %d %d\n", buffer1_max_size, buffer2_max_size);
+	(void)size1;
+	(void)size2;
 	return AUDSRV_ERR_NOERROR;
 }
 
@@ -287,12 +279,12 @@ int audsrv_set_format(int freq, int bits, int channels)
 
 	/* set ring buffer size to 10 iterations worth of data (~50 ms) */
 	feed_size = ((512 * core1_freq) / 48000) << core1_sample_shift;
-	ringbuf_size = feed_size * 10;
+	//ringbuf_size = feed_size * 10;
 
 	writepos = 0;
 	readpos = (feed_size * 5) & ~3;
 
-	printf("audsrv: freq %d bits %d channels %d ringbuf_sz %d feed_size %d shift %d\n", freq, bits, channels, ringbuf_size, feed_size, core1_sample_shift);
+	printf("audsrv: freq %d bits %d channels %d feed_size %d shift %d\n", freq, bits, channels, feed_size, core1_sample_shift);
 
 	format_changed = 1;
 	return AUDSRV_ERR_NOERROR;
@@ -368,7 +360,8 @@ int audsrv_available()
 	}
 	else
 	{
-		return (ringbuf_size - (writepos - readpos));
+		//return (ringbuf_size - (writepos - readpos));
+		return 1;
 	}
 }
 
@@ -381,7 +374,7 @@ int audsrv_queued()
 {
 	if (writepos < readpos)
 	{
-		return (ringbuf_size - (readpos - writepos));
+		return 1;
 	}
 	else
 	{
@@ -397,23 +390,8 @@ int audsrv_queued()
  * in audsrv's internal ring buffer.
  */
 int audsrv_wait_audio(int buflen)
-{
-	if (ringbuf_size < buflen)
-	{
-		/* this will never happen */
-		return AUDSRV_ERR_ARGS;
-	}
-
-	while (1)
-	{
-		if (audsrv_available() >= buflen)
-		{
-			/* enough space! */
-			return AUDSRV_ERR_NOERROR;
-		}
-
-		WaitSema(queue_sema);
-	}
+{	
+	return AUDSRV_ERR_NOERROR;
 }
 
 /** Uploads audio buffer to SPU
@@ -445,28 +423,6 @@ int audsrv_play_audio(const char *buf, int buflen)
 	//printf("play audio %d bytes, readpos %d, writepos %d avail %d\n", buflen, readpos, writepos, audsrv_available());
 
 	/* limit to what's available, no crossing possible */
-	buflen = MIN(buflen, audsrv_available());
-
-	while (buflen > 0)
-	{
-		int copy = buflen;
-		if (writepos >= readpos)
-		{
-			copy = MIN(ringbuf_size - writepos, buflen);
-		}
-
-		memcpy(ringbuf + writepos, buf, copy);
-		buf = buf + copy;
-		buflen = buflen - copy;
-		sent = sent + copy;
-
-		writepos = writepos + copy;
-		if (writepos >= ringbuf_size)
-		{
-			/* rewind */
-			writepos = 0;
-		}
-	}
 
 	return sent;
 }
@@ -490,11 +446,6 @@ int audsrv_set_volume(int vol)
 
 int audsrv_set_threshold(int amount)
 {
-	if (amount > (ringbuf_size / 2))
-	{
-		/* amount is greater than what we'd recommend */
-		return AUDSRV_ERR_ARGS;
-	}
 
 	printf("audsrv: callback threshold: %d\n", amount);
 	fillbuf_threshold = amount;
@@ -557,6 +508,7 @@ static void play_thread(void *arg)
 			
 			if (readpos >= *buffer_size)
 			{
+				
 				readpos = 0;
 				if (buffer_in_use)
 				{
@@ -570,7 +522,6 @@ static void play_thread(void *arg)
 					buffer_size = &buffer2_data_size;
 					buffer1_has_data = 0;
 				} 
-
 			}
 		}
 		else

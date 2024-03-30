@@ -649,7 +649,6 @@ void S_ChangeMusic(int musicnum,
 {
     musicinfo_t *music;
     char namebuf[9];
-
     if ((musicnum <= mus_None) || (musicnum >= NUMMUSIC))
     {
         I_Error("Bad music number %d", musicnum);
@@ -657,7 +656,7 @@ void S_ChangeMusic(int musicnum,
     else
         music = &S_music[musicnum];
 
-    if (music == playingMusic.playing)
+    if (musicnum == playingMusic.playing)
         return;
 
     int exists = CheckCache(musicnum);

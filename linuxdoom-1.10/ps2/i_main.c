@@ -127,8 +127,8 @@ main
 
     audsrv_set_volume(50);
 
-    audioBuffer1 = (char*)SifAllocIopHeap(BUFFERSIZE);
-    audioBuffer2 = (char*)SifAllocIopHeap(BUFFERSIZE);
+    audioBuffer1 = SifAllocIopHeap(BUFFERSIZE);
+    audioBuffer2 = SifAllocIopHeap(BUFFERSIZE);
 
     if (!audioBuffer1 || !audioBuffer2)
     {

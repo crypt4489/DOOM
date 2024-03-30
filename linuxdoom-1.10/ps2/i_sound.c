@@ -95,10 +95,10 @@ static int sampleToPlayIndex = 0;
 static int vagFileIndex = 0;
 
 static int buffer1Full, buffer2Full; 
-static int bufferToFill;
+static int bufferToFill, bufferFilled;
 char dblBuffer[(5*44100)+400];
 static int writeCount;
-
+boolean playing = false;
 enum 
 {
   BUFFER1 = 1,
@@ -113,7 +113,7 @@ SifDmaTransfer_t dmaStruct;
 
 void I_TransferAudio()
 {
-  int bufferAssign = bufferToFill;
+  bufferFilled = bufferToFill;
   if (bufferToFill == BUFFER1)
   {
     dmaStruct.dest = (void*)audioBuffer1;
@@ -129,7 +129,7 @@ void I_TransferAudio()
   }
   while((sifTransferID = SifSetDma(&dmaStruct, 1)) == 0);
   while(SifDmaStat(sifTransferID) == 0);
-  audsrv_transfer_notify(bufferAssign, writeCount);
+  
 }
 
 
@@ -468,7 +468,7 @@ void I_PlaySong(int handle, int looping)
   musicdies = gametic + TICRATE * 30;
   tsf_reset(gTsfInstance);
   tsf_channel_set_bank_preset(gTsfInstance, 9, 128, 0);
-
+  playing = false;
   for (int i = 0; i<sizeof(dblBuffer); i+=(5*470))
     I_RenderSamples(5*470);
 }
@@ -562,6 +562,7 @@ void I_CheckBufferIOP(void)
       if (bufferToFill != BUFFERBOTH)
       {
         I_TransferAudio();
+        audsrv_transfer_notify(bufferToFill,  writeCount);
         writeCount = 0;
       }
       return;
@@ -587,6 +588,12 @@ void I_UpdateMusic(void)
   {
     return;
   }
+
+  if (!playing)
+  {
+    playing = true;
+    audsrv_transfer_notify(BUFFER1, sizeof(dblBuffer));
+  } 
 
   I_CheckBufferIOP();
 
@@ -645,6 +652,8 @@ static void I_RenderSamples(int size)
   if (writeCount >= sizeof(dblBuffer) && bufferToFill != BUFFERBOTH)
   {
     I_TransferAudio();
+    if (playing)
+      audsrv_transfer_notify(bufferFilled, writeCount);
     writeCount = 0;
   }
 }
