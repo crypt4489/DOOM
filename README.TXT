@@ -1,78 +1,24 @@
 
-Here it is, at long last.  The DOOM source code is released for your
-non-profit use.  You still need real DOOM data to work with this code.
-If you don't actually own a real copy of one of the DOOMs, you should
-still be able to find them at software stores.
+This is a Playstation 2 port of the original doom source code.
 
-Many thanks to Bernd Kreimeier for taking the time to clean up the
-project and make sure that it actually works.  Projects tends to rot if
-you leave it alone for a few years, and it takes effort for someone to
-deal with it again.
+Features:
 
-The bad news:  this code only compiles and runs on linux.  We couldn't
-release the dos code because of a copyrighted sound library we used
-(wow, was that a mistake -- I write my own sound code now), and I
-honestly don't even know what happened to the port that microsoft did
-to windows.
+Cheats, Music, ADPCM sound effects, Memcard saving and loading, wad selecter, jumping.
 
-Still, the code is quite portable, and it should be straightforward to
-bring it up on just about any platform.
+The music is off. It runs on the TinySoundFont header library, which uses double precision for some calculations. 
+Everything is converted to single precision which causes the pitch to be off. You can experiment with different
+soundfonts, but it comes with gzdoom.sf2 which is ~3.25MB. I haven't experimented with anything bigger than that. Some slowdown occasionally
+happens during a dma transfer to iop, but it runs fine otherwise.
 
-I wrote this code a long, long time ago, and there are plenty of things
-that seem downright silly in retrospect (using polar coordinates for
-clipping comes to mind), but overall it should still be a usefull base
-to experiment and build on.
+I changed audsrv (included in the repo) to make it so the playback wasn't tied to the framerate. Now it runs on a triple-buffered setup where two buffers
+are on the IOP for 5 seconds of music while another 5 seconds is stored on EE side until a IOP buffer is free. 
 
-The basic rendering concept -- horizontal and vertical lines of constant
-Z with fixed light shading per band was dead-on, but the implementation
-could be improved dramatically from the original code if it were
-revisited.  The way the rendering proceded from walls to floors to
-sprites could be collapsed into a single front-to-back walk of the bsp
-tree to collect information, then draw all the contents of a subsector
-on the way back up the tree.  It requires treating floors and ceilings
-as polygons, rather than just the gaps between walls, and it requires
-clipping sprite billboards into subsector fragments, but it would be
-The Right Thing.
+It runs on the cdvd currently and I only have tested it with pcsx2 emulator (and have never tested the drawing library on ps2 either). I think changes would have to be made to run 
+with ps2link. 
 
-The movement and line of sight checking against the lines is one of the
-bigger misses that I look back on.  It is messy code that had some
-failure cases, and there was a vastly simpler (and faster) solution
-sitting in front of my face.  I used the BSP tree for rendering things,
-but I didn't realize at the time that it could also be used for
-environment testing.  Replacing the line of sight test with a bsp line
-clip would be pretty easy.  Sweeping volumes for movement gets a bit
-tougher, and touches on many of the challenges faced in quake / quake2
-with edge bevels on polyhedrons.
+This was more of an experiment for myself on how to port a game (albeit simply) but if you happen to play it, let me know
+any feedback.
 
-Some project ideas:
+Thanks,
 
-Port it to your favorite operating system.
-
-Add some rendering features -- transparency, look up / down, slopes,
-etc.
-
-Add some game features -- weapons, jumping, ducking, flying, etc.
-
-Create a packet server based internet game.
-
-Create a client / server based internet game.
-
-Do a 3D accelerated version.  On modern hardware (fast pentium + 3DFX)
-you probably wouldn't even need to be clever -- you could just draw the
-entire level and get reasonable speed.  With a touch of effort, it should
-easily lock at 60 fps (well, there are some issues with DOOM's 35 hz
-timebase...).  The biggest issues would probably be the non-power of two
-texture sizes and the walls composed of multiple textures.
-
-
-I don't have a real good guess at how many people are going to be
-playing with this, but if significant projects are undertaken, it would
-be cool to see a level of community cooperation.  I know that most early
-projects are going to be rough hacks done in isolation, but I would be
-very pleased to see a coordinated 'net release of an improved, backwards
-compatable version of DOOM on multiple platforms next year.
-
-Have fun.
-
-John Carmack
-12-23-97
+Drew Fletcher
