@@ -157,9 +157,8 @@ static void update_volume()
 int audsrv_set_buffers(char *ptr1, char *ptr2, 
 					   u32 size1, u32 size2)
 {
-	printf("iop no workie %d %d\n", ptr1, ptr2);
-	buffer1 = ptr1+8;
-	buffer2 = ptr2+8;
+	buffer1 = ptr1;
+	buffer2 = ptr2;
 	buffer1_max_size = size1;
 	buffer2_max_size = size2;
 	printf("set buffers and size %d %d\n", buffer1_max_size, buffer2_max_size);
@@ -169,6 +168,7 @@ int audsrv_set_buffers(char *ptr1, char *ptr2,
 
 int audsrv_transfer_notify(int buffer, int size)
 {
+	
 	if (buffer == BUFFER1)
 	{
 		buffer1_has_data = 1;
@@ -183,7 +183,7 @@ int audsrv_transfer_notify(int buffer, int size)
 	{
 		return AUDSRV_ERR_ARGS;
 	}
-
+		
 	if (playing == 0)
 	{
 		/* audio is always playing, just change the volume */
@@ -551,8 +551,10 @@ static void play_thread(void *arg)
 			up.left = rendered_left;
 			up.right = rendered_right;
 			step = upsampler(&up);
-
+			
 			readpos = readpos + step;
+
+			
 			if (readpos >= *buffer_size)
 			{
 				readpos = 0;

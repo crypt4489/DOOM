@@ -14,6 +14,8 @@
 #include <ctype.h>
 #include <string.h>
 
+#include "m_launcherBKGD.h"
+
 extern u32 SKYDOOM_HEIGHT;
 extern u32 SKYDOOM_WIDTH;
 
@@ -42,9 +44,11 @@ void M_LauncherInit(void)
 {
     runninglauncher = true;
 
-    background = AddAndCreateTexture("BACKGROUND.PNG", READ_PNG, 0, 0, TEX_ADDRESS_CLAMP, 1);
+    background = AddAndCreateTextureFromBuffer(backgroundpng, sizeof(backgroundpng), "BACKGROUND", READ_PNG, 0, 0, TEX_ADDRESS_CLAMP, 1); 
+    //AddAndCreateTexture("BACKGROUND.PNG", READ_PNG, 0, 0, TEX_ADDRESS_CLAMP, 1);
 
-    fontimage = CreateFontStruct("DEFAULTFONT.BMP", "DEFAULTFONTDATA.DAT", READ_BMP);
+    fontimage = CreateFontStructFromBuffer("DEFAULT", DefaultFontbmp, DefaultFontDatadat, READ_BMP, sizeof(DefaultFontbmp), sizeof(DefaultFontDatadat)); 
+    //CreateFontStruct("DEFAULTFONT.BMP", "DEFAULTFONTDATA.DAT", READ_BMP);
 
     fontimage->color.r = 0x00;
     fontimage->color.g = 0x00;

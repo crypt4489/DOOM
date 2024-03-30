@@ -14,14 +14,14 @@ OBJEXT    := o
 CEXT      := c
 
 EE_BIN = doom.elf
-IOP_MOD = sio2man.irx padman.irx sound.irx libsd.irx 
+IOP_MOD = sio2man.irx padman.irx libsd.irx mcman.irx mcserv.irx
 
 EE_SRC_C += $(shell find $(SRC_DIR) -type f -name *.$(CEXT))
 EE_OBJS += $(patsubst $(SRC_DIR)/%, $(OBJS_DIR)/%, $(EE_SRC_C:.$(CEXT)=.$(OBJEXT)))
 
 EE_DVP = dvp-as
 
-EE_LIBS= -lps2 -ldma -lgraph -ldraw -lkernel -lpacket -lpad -lcdvd -lpng -lz -lunzip -laudsrvx 
+EE_LIBS= -lps2 -ldma -lgraph -ldraw -lkernel -lpacket -lpad -lcdvd -lpng -lz -lunzip -laudsrvx -lmc
 
 PS2SDK=/usr/local/ps2dev/ps2sdk
 
@@ -40,6 +40,8 @@ include $(PS2SDK)/samples/Makefile.pref
 all: compile disc update_win
 
 compile:
+	make -C $(AUDSRVX_IOP)
+	make -C $(AUDSRVX_EE)
 	make
 
 directories:
@@ -53,12 +55,14 @@ update_win:
 	cp $(ISO_TGT) $(WIN_DIR)
 
 disc:
-	mkisofs -l -o $(ISO_TGT) $(TARGET_DIR)/$(EE_BIN) SYSTEM.CNF $(IRX_DIR) $(AUDSRVX_IRX)audsrvx.irx doom1.wad doom2.wad gzdoom.sf2 background.png DefaultFont.bmp DefaultFontData.dat
+	mkisofs -l -o $(ISO_TGT) $(TARGET_DIR)/$(EE_BIN) SYSTEM.CNF $(IRX_DIR) $(AUDSRVX_IRX)audsrvx.irx *.wad gzdoom.sf2
 
 irx:
 	mv $(IOP_MOD) "$(IRX_DIR)"
 
 clean:
+	make clean -C $(AUDSRVX_EE)
+	make clean -C $(AUDSRVX_IOP)
 	rm -rf $(ISO_TGT) $(TARGET_DIR)/$(EE_BIN) $(EE_OBJS)
 
 	

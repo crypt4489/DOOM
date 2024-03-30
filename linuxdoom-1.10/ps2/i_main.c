@@ -27,6 +27,7 @@ rcsid[] = "$Id: i_main.c,v 1.4 1997/02/03 22:45:10 b1 Exp $";
 #include "audsrvx.h"
 #include <loadfile.h>
 #include <iopheap.h>
+#include <libmc.h>
 
 #include "doomdef.h"
 #include "i_video.h"
@@ -38,6 +39,7 @@ rcsid[] = "$Id: i_main.c,v 1.4 1997/02/03 22:45:10 b1 Exp $";
 #include "log/ps_log.h"
 #include "io/ps_file_io.h"
 #include "math/ps_misc.h"
+#include "io/ps_memcard.h"
 
 #include "tsf.h"
 u32 SKYDOOM_HEIGHT = 480;
@@ -48,7 +50,11 @@ tsf* gTsfInstance = NULL;
 char *audioBuffer1 = NULL;
 char *audioBuffer2 = NULL;
 s32 sifTransferID = -1;
-boolean bufferToWrite, bufferToRead;
+
+int memCardType, memCardFree, memCardFormat;
+extern const char const* doomdir;
+extern sceMcTblGetDir saveentries[6];
+boolean useMemCard = false;
 
 #define BUFFERSIZE (44100 * 5) + 400
 int
@@ -67,7 +73,48 @@ main
     ret = SifLoadModule("cdrom0:\\AUDSRVX.IRX", 0, NULL);
     printf("audsrv loadmodule %d\n", ret);
 
+    LoadMCMANModules();
+
+    if (mcInit(1) < 0)
+    {
+        ERRORLOG("Memcard init didn't work");
+        return -1;
+    }
+
+    int memCardRet = mcGetInfo(0 , 0,  &memCardType, &memCardFree, &memCardFormat);
+    mcSync(0, NULL, &ret);
+
+    memCardRet = mcGetInfo(0 , 0,  &memCardType, &memCardFree, &memCardFormat);
+    mcSync(0, NULL, &ret);
+
+    if (!ret)
+    {
+        useMemCard = true;
+    }
+
+    DEBUGLOG("ret from memcard is %d %d", ret, memCardRet);
+    DEBUGLOG("%d type %d free %d format", memCardType, memCardFree, memCardFormat);
+
+    if (useMemCard)
+    {
+        mcGetDir(0, 0, doomdir, 0, 6, saveentries);
+
+        mcSync(0, NULL, &ret);
+
+        if (ret == -4)
+        {
+            mcMkDir(0, 0, doomdir);
+            mcSync(0, NULL, &ret);
+        }
+    }
+
     ret = audsrv_init();
+
+    if (ret < 0)
+    {
+        ERRORLOG("audsrv init didn't work");
+        return -1;
+    }
 
     audsrv_adpcm_init();
 
@@ -80,16 +127,14 @@ main
 
     audsrv_set_volume(50);
 
-    audioBuffer1 = (char*)SifAllocIopHeap(BUFFERSIZE+8);
-    audioBuffer2 = (char*)SifAllocIopHeap(BUFFERSIZE+8);
+    audioBuffer1 = (char*)SifAllocIopHeap(BUFFERSIZE);
+    audioBuffer2 = (char*)SifAllocIopHeap(BUFFERSIZE);
 
     if (!audioBuffer1 || !audioBuffer2)
     {
         ERRORLOG("Cannot allocate audio buffers");
     }
 
-
-    DEBUGLOG("%d %d", audioBuffer1, audioBuffer2);
     audsrv_set_buffers(audioBuffer1, audioBuffer2, BUFFERSIZE, BUFFERSIZE);
 
     u32 sf2Size = 0;
@@ -105,9 +150,6 @@ main
     gTsfInstance = tsf_load_memory(gzsf2, sf2Size);
 
     tsf_set_output(gTsfInstance, TSF_MONO, 22050, 0.0f);
-
-
-
 
     myargc = argc; 
     myargv = argv; 

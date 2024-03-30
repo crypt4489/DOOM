@@ -23,8 +23,7 @@
 static const char
     rcsid[] = "$Id: g_game.c,v 1.8 1997/02/03 22:45:09 b1 Exp $";
 
-#include <string.h>
-#include <stdlib.h>
+
 
 #include "doomdef.h"
 #include "doomstat.h"
@@ -67,6 +66,10 @@ static const char
 
 #include "g_game.h"
 #include "log/ps_log.h"
+
+
+#include <libmc.h>
+
 
 #define SAVEGAMESIZE 0x2c000
 #define SAVESTRINGSIZE 24
@@ -1291,10 +1294,8 @@ void G_DoSaveGame(void)
     int length;
     int i;
 
-    if (M_CheckParm("-cdrom"))
-        sprintf(name, "c:\\doomdata\\" SAVEGAMENAME "%d.dsg", savegameslot);
-    else
-        sprintf(name, SAVEGAMENAME "%d.dsg", savegameslot);
+    
+    sprintf(name, "%s"SAVEGAMENAME "%d.dsg", "mc0:/SKYDOOM/", savegameslot);
     description = savedescription;
 
     save_p = savebuffer = screens[1] + 0x4000;
@@ -1326,10 +1327,29 @@ void G_DoSaveGame(void)
     if (length > SAVEGAMESIZE)
         I_Error("Savegame buffer overrun");
     M_WriteFile(name, savebuffer, length);
+    /*int fd = mcOpen(0, 0, name, sceMcFileAttrWriteable | sceMcFileCreateFile);
+    int ret;
+    mcSync(0, NULL, &ret);
+    if (ret < 0)
+    {
+        players[consoleplayer].message = "COULDN'T OPEN SAVE";
+        goto end;
+    }
+    ret = mcWrite(fd, savebuffer, length);
+    mcSync(0, NULL, &ret);
+    if (ret < 0)
+    {
+        players[consoleplayer].message = "COULDN'T WRITE SAVE";
+    }
+    else 
+    { */
+        players[consoleplayer].message = GGSAVED;
+    //}
+end:
     gameaction = ga_nothing;
     savedescription[0] = 0;
 
-    players[consoleplayer].message = GGSAVED;
+    sendpause = true;
 
     // draw the pattern into the back screen
     R_FillBackScreen();

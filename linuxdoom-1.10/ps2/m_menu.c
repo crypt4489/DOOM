@@ -67,6 +67,8 @@ static const char
 
 #include "ps_global.h"
 
+#include "libmc.h"
+
 extern Texture *image;
 
 extern patch_t *hu_font[HU_FONTSIZE];
@@ -235,6 +237,7 @@ void M_StartControlPanel(void);
 void M_StartMessage(char *string, void *routine, boolean input);
 void M_StopMessage(void);
 void M_ClearMenus(void);
+void M_GetMemCardState(void);
 
 //
 // DOOM MENU
@@ -507,6 +510,32 @@ ButtonCharMap buttonMap[4] = {
     {'^', "M_TRIGLE"},
     {'&', "M_SQUARE"}};
 
+const char const* doomdir = "/SKYDOOM";
+sceMcTblGetDir saveentries[8];
+extern boolean useMemCard;
+extern int memCardType, memCardFree, memCardFormat;
+#define NOMEMCARD "You need a memory card in slot one"
+#include "log/ps_log.h"
+
+void M_GetMemCardState(void)
+{
+    int ret;
+    int memCardRet = mcGetInfo(0 , 0,  &memCardType, &memCardFree, &memCardFormat);
+    mcSync(0, NULL, &ret);
+
+    if (ret > -1)
+    {
+        useMemCard = true;
+    } else {
+        useMemCard = false;
+    }
+
+   // DEBUGLOG("ret from memcard is %d %d", ret, memCardRet);
+    //DEBUGLOG("%d type %d free %d format", memCardType, memCardFree, memCardFormat);
+}
+
+
+
 //
 // M_ReadSaveStrings
 //  read the strings from the savegame files
@@ -515,24 +544,31 @@ void M_ReadSaveStrings(void)
 {
     int handle;
     int count;
-    int i;
+    int i, j;
     char name[256];
 
-    for (i = 0; i < load_end; i++)
-    {
-        if (M_CheckParm("-cdrom"))
-            sprintf(name, "c:\\doomdata\\" SAVEGAMENAME "%d.dsg", i);
-        else
-            sprintf(name, SAVEGAMENAME "%d.dsg", i);
+    sprintf(name, "%s%s", doomdir, "/*");
 
-        handle = open(name, O_RDONLY | 0, 0666);
-        if (handle == -1)
+    mcGetDir(0, 0, name, 0, load_end+2, saveentries);
+
+    mcSync(0, NULL, &count);
+
+    count -= 2; //skip current and parent directory files
+
+    for (i = 0, j = 2; i<load_end; i++, j++)
+    {
+        if (i >= count)
         {
             strcpy(&savegamestrings[i][0], EMPTYSTRING);
             LoadMenu[i].status = 0;
             continue;
         }
-        count = read(handle, &savegamestrings[i], SAVESTRINGSIZE);
+
+        sprintf(name, "mc0:/SKYDOOM/%s", saveentries[j].EntryName);
+
+        handle = open(name, O_RDONLY, 0666);
+
+        read(handle, &savegamestrings[i], SAVESTRINGSIZE);
         close(handle);
         LoadMenu[i].status = 1;
     }
@@ -577,11 +613,8 @@ void M_DrawSaveLoadBorder(int x, int y)
 void M_LoadSelect(int choice)
 {
     char name[256];
-
-    if (M_CheckParm("-cdrom"))
-        sprintf(name, "c:\\doomdata\\" SAVEGAMENAME "%d.dsg", choice);
-    else
-        sprintf(name, SAVEGAMENAME "%d.dsg", choice);
+    sprintf(name, "%s%s%s"SAVEGAMENAME "%d.dsg", 
+            "mc0:", doomdir, "/", choice);
     G_LoadGame(name);
     M_ClearMenus();
 }
@@ -594,6 +627,14 @@ void M_LoadGame(int choice)
     if (netgame)
     {
         M_StartMessage(LOADNET, NULL, false);
+        return;
+    }
+
+    M_GetMemCardState();
+
+    if (!useMemCard)
+    {
+        M_StartMessage(NOMEMCARD, NULL, false);
         return;
     }
 
@@ -636,6 +677,7 @@ void M_DrawSave(void)
 //
 void M_DoSave(int slot)
 {
+   // DEBUGLOG("%s %d", savegamestrings[slot], slot);
     G_SaveGame(slot, savegamestrings[slot]);
     M_ClearMenus();
 
@@ -672,6 +714,14 @@ void M_SaveGame(int choice)
 
     if (gamestate != GS_LEVEL)
         return;
+
+    M_GetMemCardState();
+
+    if (!useMemCard)
+    {
+        M_StartMessage(NOMEMCARD, NULL, false);
+        return;
+    }
 
     M_SetupNextMenu(&SaveDef);
     M_ReadSaveStrings();
@@ -1431,7 +1481,7 @@ boolean M_Responder(event_t *ev)
         case KEY_SELECT:
             saveStringEnter = 0;
             if (savegamestrings[saveSlot][0])
-                // M_DoSave(saveSlot);
+                M_DoSave(saveSlot);
                 saveInputCharIndex = 0;
             break;
 

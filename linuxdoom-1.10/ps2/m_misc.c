@@ -48,7 +48,7 @@ rcsid[] = "$Id: m_misc.c,v 1.6 1997/02/03 22:45:10 b1 Exp $";
 #include "i_system.h"
 #include "i_video.h"
 #include "v_video.h"
-#
+
 #include "hu_stuff.h"
 
 // State.
@@ -110,6 +110,7 @@ M_DrawText
 #define O_BINARY 0
 #endif
 
+
 boolean
 M_WriteFile
 ( char const*	name,
@@ -133,7 +134,6 @@ M_WriteFile
     return true;
 }
 
-
 //
 // M_ReadFile
 //
@@ -143,15 +143,15 @@ M_ReadFile
   byte**	buffer )
 {
     int	handle, count, length;
-    struct stat	fileinfo;
     byte		*buf;
-	
     handle = open (name, O_RDONLY | O_BINARY, 0666);
     if (handle == -1)
 	I_Error ("Couldn't read file %s", name);
-    if (fstat (handle,&fileinfo) == -1)
-	I_Error ("Couldn't read file %s", name);
-    length = fileinfo.st_size;
+    
+    length = lseek(handle, 0, SEEK_END);
+
+    lseek(handle, 0, SEEK_SET);
+
     buf = Z_Malloc (length, PU_STATIC, NULL);
     count = read (handle, buf, length);
     close (handle);
