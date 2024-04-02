@@ -583,7 +583,6 @@ void I_CheckBufferIOP(void)
 
 void I_UpdateMusic(void)
 {
-  
   if (!g_MidiMessage)
   {
     return;
@@ -604,9 +603,10 @@ void I_UpdateMusic(void)
   //DEBUGLOG("Rendering...");
   I_RenderSamples(470 * 5);
 }
-
+#include <kernel.h>
 static void I_RenderSamples(int size)
 {
+ // FlushCache(0);
   s16 *out = (s16 *)(&dblBuffer[writeCount]); 
   int SampleBlock = 0;
   int SampleCount = size >> 1;

@@ -295,6 +295,7 @@ void I_UpdateNoBlit(void)
 	// what is this?
 }
 static Color colors[256];
+unsigned char *pixels;
 //
 // I_FinishUpdate
 //
@@ -303,30 +304,40 @@ static Color colors[256];
 void I_FinishUpdate(void)
 {
 	timeend = getTicks(g_Manager.timer);
-	if (timeend - timestart > 16)
-	{
+	//DEBUGLOG("%f", timeend - timestart);
+
 		byte *in = screens[0];
-		for (int i = 0; i < SCREENHEIGHT * SCREENWIDTH; i++)
+		for (int i = 0; i < SCREENHEIGHT * SCREENWIDTH; i += 4)
 		{
-			int inColor = in[i];
-			int index = i * 4;
-			image->pixels[index + 0] = colors[inColor].r;
-			image->pixels[index + 1] = colors[inColor].g;
-			image->pixels[index + 2] = colors[inColor].b;
+			int inColor1 = in[i];
+			int inColor2 = in[i + 1];
+			int inColor3 = in[i + 2];
+			int inColor4 = in[i + 3];
+
+			int index1 = i * 4;
+			int index2 = index1 + 4;
+			int index3 = index1 + 8;
+			int index4 = index1 + 12;
+
+			memcpy(&pixels[index1], &(colors[inColor1].r), 3);
+			memcpy(&pixels[index2], &(colors[inColor2].r), 3);
+			memcpy(&pixels[index3], &(colors[inColor3].r), 3);
+			memcpy(&pixels[index4], &(colors[inColor4].r), 3);
 		}
 
 		
 		ClearScreen(g_Manager.targetBack, g_Manager.gs_context, 0x00, 0xFF, 0x00, 0x00);
 		DrawFullScreenQuad(SKYDOOM_HEIGHT_HALF, SKYDOOM_WIDTH_HALF, image);
+		float time = getTicks(g_Manager.timer);
 		EndFrame(0);
+		
 		graph_start_vsync();
-		while(!(graph_check_vsync))
+		while(!(graph_check_vsync()))
 		{
-			I_MusicUpdate();
+			I_UpdateMusic();
 		}
-
+		//DEBUGLOG("end %f", getTicks(g_Manager.timer)-timeend);
 		timestart = timeend;
-	}
 	
 }
 
@@ -470,9 +481,11 @@ void I_InitGraphics(void)
 	image->lod.calculation = LOD_USE_K;
 	image->lod.max_level = 0;
 
-	image->pixels = (u8 *)malloc(320 * 240 * 4);
+	image->pixels = (u8 *)malloc(320 * 200 * 4);
 
 	// AddToManagerTexList(&g_Manager, image);
+
+	pixels = image->pixels;
 
 	timestart = timeend = getTicks(g_Manager.timer);
 }
