@@ -600,13 +600,14 @@ void I_UpdateMusic(void)
   {
     return;
   }
-  //DEBUGLOG("Rendering...");
+  
   I_RenderSamples(470 * 5);
+ 
 }
 #include <kernel.h>
 static void I_RenderSamples(int size)
 {
- // FlushCache(0);
+  FlushCache(0);
   s16 *out = (s16 *)(&dblBuffer[writeCount]); 
   int SampleBlock = 0;
   int SampleCount = size >> 1;
@@ -617,6 +618,7 @@ static void I_RenderSamples(int size)
     {
       SampleBlock = SampleCount;
     }
+
     // Loop through all MIDI messages which need to be played up until the current playback time
     for (g_Msec += SampleBlock * (1000.0 / 22050.0); g_MidiMessage && g_Msec >= g_MidiMessage->time; g_MidiMessage = g_MidiMessage->next)
     {
