@@ -803,7 +803,7 @@ boolean ST_checkCheat(char *stringinput)
 				else if (i != pw_strength)
 					plyr->powers[i] = 1;
 				else
-					plyr->powers[i] = 0;ST_MUCHPAIN
+					plyr->powers[i] = 0;
 
 				plyr->message = STSTR_BEHOLDX;
 			}
