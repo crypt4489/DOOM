@@ -36,6 +36,7 @@
 //
 //	M_Menu.C
 //
+#define SCRFOUND	"you found a secret area!"
 #define PRESSKEY 	"press a key."
 #define PRESSYN 	"press  $  or  ^"
 #define QUITMSG	"are you sure you want to\nquit this great game?"
