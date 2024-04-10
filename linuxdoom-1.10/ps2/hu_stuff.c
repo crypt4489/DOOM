@@ -494,7 +494,7 @@ void HU_Drawer(void)
     if (automapactive)
 	HUlib_drawTextLine(&w_title, false);
     if (plr->foundsecretarea && usergame) {
-    HU_WriteText(85, 80, "A SECRET IS REVEALED!");
+    HU_WriteText(85, 80, "YOU FOUND A SECRET AREA!");
     
     }
 
