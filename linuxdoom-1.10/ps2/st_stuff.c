@@ -803,7 +803,7 @@ boolean ST_checkCheat(char *stringinput)
 				else if (i != pw_strength)
 					plyr->powers[i] = 1;
 				else
-					plyr->powers[i] = 0;
+					plyr->powers[i] = 0;ST_MUCHPAIN
 
 				plyr->message = STSTR_BEHOLDX;
 			}
@@ -955,7 +955,7 @@ void ST_updateFaceWidget(void)
 			// being attacked
 			priority = 7;
 
-			if (plyr->health - st_oldhealth > ST_MUCHPAIN)
+			if (st_oldhealth - plyr->health > ST_MUCHPAIN)
 			{
 				st_facecount = ST_TURNCOUNT;
 				st_faceindex = ST_calcPainOffset() + ST_OUCHOFFSET;
@@ -1007,7 +1007,7 @@ void ST_updateFaceWidget(void)
 		// getting hurt because of your own damn stupidity
 		if (plyr->damagecount)
 		{
-			if (plyr->health - st_oldhealth > ST_MUCHPAIN)
+			if (st_oldhealth - plyr->health > ST_MUCHPAIN)
 			{
 				priority = 7;
 				st_facecount = ST_TURNCOUNT;
