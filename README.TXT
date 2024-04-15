@@ -19,6 +19,10 @@ with ps2link.
 This was more of an experiment for myself on how to port a game (albeit simply) but if you happen to play it, let me know
 any feedback.
 
+NOTE:
+
+In order to compile, add your ps2sdk build path to the variable PS2SDKSRC
+
 Thanks,
 
 Drew Fletcher
