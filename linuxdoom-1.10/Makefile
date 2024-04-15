@@ -2,8 +2,8 @@ IRX_DIR := ./irx
 OBJS_DIR := ./objs
 SRC_DIR := ./ps2
 TARGET_DIR := ./bin
-WIN_DIR := /mnt/c/Users/dflet/Desktop/
-PS2_LIB_DIR := /home/dfletcher/PS2DEMO/PS2-Development/inc
+WIN_DIR ?= 
+PS2_LIB_DIR := ./inc
 AUDSRVX := ./audsrvx
 AUDSRVX_EE := $(AUDSRVX)/ee/audsrvx/
 AUDSRVX_IOP := $(AUDSRVX)/iop/audsrvx/
@@ -32,6 +32,8 @@ EE_LDFLAGS = -L./lib -L$(AUDSRVX_LIB) -L$(PS2SDK)/ee/common/lib -L$(PS2SDK)/ee/l
 
 ISO_TGT=doom.iso
 
+PS2SDKSRC = /home/dfletcher/ps2dev/build/ps2sdk
+
 include ./Makefile.eeglobal
 include $(PS2SDK)/samples/Makefile.pref
 
@@ -40,8 +42,8 @@ include $(PS2SDK)/samples/Makefile.pref
 all: compile disc update_win
 
 compile:
-	make -C $(AUDSRVX_IOP)
-	make -C $(AUDSRVX_EE)
+	PS2SDKSRC=$(PS2SDKSRC) make -C $(AUDSRVX_IOP)
+	PS2SDKSRC=$(PS2SDKSRC) make -C $(AUDSRVX_EE)
 	make
 
 directories:
@@ -52,7 +54,7 @@ directories:
 	if [ ! -d $(TARGET_DIR) ]; then mkdir -p $(TARGET_DIR) ; fi
 
 update_win:
-	cp $(ISO_TGT) $(WIN_DIR)
+	if [ ! -z "$(WIN_DIR)" ]; then cp $(ISO_TGT) $(WIN_DIR) ; fi
 
 disc:
 	mkisofs -l -o $(ISO_TGT) $(TARGET_DIR)/$(EE_BIN) SYSTEM.CNF $(IRX_DIR) $(AUDSRVX_IRX)audsrvx.irx *.wad gzdoom.sf2
@@ -61,8 +63,8 @@ irx:
 	mv $(IOP_MOD) "$(IRX_DIR)"
 
 clean:
-	make clean -C $(AUDSRVX_EE)
-	make clean -C $(AUDSRVX_IOP)
+	PS2SDKSRC=$(PS2SDKSRC) make clean -C $(AUDSRVX_EE)
+	PS2SDKSRC=$(PS2SDKSRC) make clean -C $(AUDSRVX_IOP)
 	rm -rf $(ISO_TGT) $(TARGET_DIR)/$(EE_BIN) $(EE_OBJS)
 
 	

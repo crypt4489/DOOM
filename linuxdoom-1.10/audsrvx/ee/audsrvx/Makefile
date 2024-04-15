@@ -7,7 +7,6 @@
 # Review ps2sdk README & LICENSE files for further details.
 
 EE_OBJS = audsrvx_rpc.o erl-support.o
-PS2SDKSRC = /home/dfletcher/ps2dev/build/ps2sdk
 
 include $(PS2SDKSRC)/Defs.make
 include $(PS2SDKSRC)/ee/Rules.lib.make

@@ -7,7 +7,6 @@
 # Review ps2sdk README & LICENSE files for further details.
 
 IOP_OBJS = audsrvx.o upsamplers.o hw.o rpc_server.o rpc_client.o common.o cdrom.o imports.o exports.o adpcm.o
-PS2SDKSRC = /home/dfletcher/ps2dev/build/ps2sdk
 
 include $(PS2SDKSRC)/Defs.make
 include $(PS2SDKSRC)/iop/Rules.bin.make
