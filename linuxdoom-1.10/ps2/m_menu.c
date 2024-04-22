@@ -510,7 +510,7 @@ ButtonCharMap buttonMap[4] = {
     {'^', "M_TRIGLE"},
     {'&', "M_SQUARE"}};
 
-const char const* doomdir = "/SKYDOOM";
+char doomdir[35] = "/SKYDOOM";
 sceMcTblGetDir saveentries[8];
 extern boolean useMemCard;
 extern int memCardType, memCardFree, memCardFormat;
@@ -564,7 +564,7 @@ void M_ReadSaveStrings(void)
             continue;
         }
 
-        sprintf(name, "mc0:/SKYDOOM/%s", saveentries[j].EntryName);
+        sprintf(name, "mc0:%s/%s", doomdir, saveentries[j].EntryName);
 
         handle = open(name, O_RDONLY, 0666);
 
@@ -615,6 +615,7 @@ void M_LoadSelect(int choice)
     char name[256];
     sprintf(name, "%s%s%s"SAVEGAMENAME "%d.dsg", 
             "mc0:", doomdir, "/", choice);
+    DEBUGLOG("%s", name);
     G_LoadGame(name);
     M_ClearMenus();
 }
@@ -1470,6 +1471,13 @@ boolean M_Responder(event_t *ev)
             {
                 saveCharIndex--;
                 savegamestrings[saveSlot][saveCharIndex] = 0;
+            } 
+            else
+            {
+                saveStringEnter = 0;
+                currentMenu = currentMenu->prevMenu;
+                itemOn = currentMenu->lastOn;
+                S_StartSound(NULL, sfx_swtchn, MAX_SOUND_COUNT);
             }
             break;
 
@@ -1526,6 +1534,13 @@ boolean M_Responder(event_t *ev)
             {
                 cheatCharIndex--;
                 cheatgamestring[cheatCharIndex] = 0;
+            } 
+            else
+            {
+                cheatStringEnter = 0;
+                currentMenu = currentMenu->prevMenu;
+                itemOn = currentMenu->lastOn;
+                S_StartSound(NULL, sfx_swtchn, MAX_SOUND_COUNT);
             }
             break;
 
@@ -1533,7 +1548,6 @@ boolean M_Responder(event_t *ev)
             cheatStringEnter = 0;
             // strcpy(&cheatgamestring[0], saveOldString);
             break;
-        #include "log/ps_log.h"
         case KEY_SELECT:
             cheatStringEnter = 0;
             if (cheatgamestring[0])

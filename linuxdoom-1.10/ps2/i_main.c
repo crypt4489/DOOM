@@ -52,7 +52,7 @@ char *audioBuffer2 = NULL;
 s32 sifTransferID = -1;
 
 int memCardType, memCardFree, memCardFormat;
-extern const char const* doomdir;
+extern char doomdir[35];
 extern sceMcTblGetDir saveentries[6];
 boolean useMemCard = false;
 

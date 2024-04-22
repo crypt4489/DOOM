@@ -93,10 +93,11 @@ static const char rcsid[] = "$Id: d_main.c,v 1.8 1997/02/03 22:45:09 b1 Exp $";
 //from m_launcher
 extern GameMode_t *gamemodes;
 extern char **wadlist;
+extern char **dirlist;
 extern u32 wadlistsize;
 
 char mainwad[25];
-
+char maindir[25];
 
 void D_DoomLoop (void);
 
@@ -761,43 +762,59 @@ void IdentifyVersionLauncher(void)
 	char *plutoniawad;
 	char *tntwad;
 
+	char *doom1path;
+	char *doom1cpath;
+	char *doomupath;
+	char *doom2path;
+
+	char *doom2fpath;
+	char *plutoniapath;
+	char *tntpath;
+
 	char *home;
 	char *doomwaddir = "";
 
 	// Commercial.
 	doom2wad = malloc(9 + 1);
-	memcpy(doom2wad, "doom2.wad", 9);
-	doom2wad[9] = '\0';
+	doom2path = malloc(6);
+	strncpy(doom2wad, "doom2.wad", 10);
+	strncpy(doom2path, "DOOM2", 6);
 
 	// Retail.
 	doomuwad = malloc(8 + 1);
-	memcpy(doomuwad, "doomu.wad", 8);
-	doomuwad[8] = '\0';
+	doomupath = malloc(6);
+	strncpy(doomuwad, "doomu.wad", 9);
+	strncpy(doomupath, "DOOMU", 6);
 
 	// Registered.
 	doomwad = malloc(8 + 1);
-	memcpy(doomwad, "doom.wad", 8);
-	doomwad[8] = '\0';
+	doom1cpath = malloc(5);
+	strncpy(doomwad, "doom.wad", 9);
+	strncpy(doom1cpath, "DOOM", 5);
 
 	// Shareware.
 	doom1wad = malloc(9 + 1);
-	memcpy(doom1wad, "doom1.wad", 9);
-	doom1wad[9] = '\0';
-
+	doom1path = malloc(6);
+	strncpy(doom1wad, "doom1.wad", 10);
+	strncpy(doom1path, "DOOM1", 6);
 	// Bug, dear Shawn.
 	// Insufficient malloc, caused spurious realloc errors.
 	plutoniawad = malloc(12 + 1);
-	memcpy(plutoniawad, "plutonia.wad", 12);
-	plutoniawad[12] = '\0';
+	plutoniapath = malloc(9);
+	strncpy(plutoniawad, "plutonia.wad", 13);
+	strncpy(plutoniapath, "PLUTONIA", 9);
 
 	tntwad = malloc(7 + 1);
-	memcpy(tntwad, "tnt.wad", 7);
-	tntwad[7] = '\0';
+	tntpath = malloc(4);
+	strncpy(tntwad, "tnt.wad", 8);
+	strncpy(tntpath, "TNT", 4);
 
 	// French stuff.
 	doom2fwad = malloc(10 + 1);
-	memcpy(doom2fwad, "doom2f.wad", 10);
-	doom2fwad[10] = '\0';
+	doom2fpath = malloc(7);
+	strncpy(doom2fwad, "doom2f.wad", 11);
+	strncpy(doom2fpath, "DOOM2F", 7);
+
 
 	char doompath[25];
 
@@ -807,6 +824,7 @@ void IdentifyVersionLauncher(void)
 	{
 		gamemodes[wadlistsize] = commercial;
 		wadlist[wadlistsize] = doom2fwad;
+		dirlist[wadlistsize] = doom2fpath;
 		wadlistsize++;
 	}
 
@@ -816,6 +834,7 @@ void IdentifyVersionLauncher(void)
 	{
 		gamemodes[wadlistsize] = commercial;
 		wadlist[wadlistsize] = doom2wad;
+		dirlist[wadlistsize] = doom2path;
 		wadlistsize++;
 	}
 
@@ -825,6 +844,7 @@ void IdentifyVersionLauncher(void)
 	{
 		gamemodes[wadlistsize] = commercial;
 		wadlist[wadlistsize] = plutoniawad;
+		dirlist[wadlistsize] = plutoniapath;
 		wadlistsize++;
 	}
 
@@ -834,6 +854,7 @@ void IdentifyVersionLauncher(void)
 	{
 		gamemodes[wadlistsize] = commercial;
 		wadlist[wadlistsize] = tntwad;
+		dirlist[wadlistsize] = tntpath;
 		wadlistsize++;
 	}
 
@@ -843,6 +864,7 @@ void IdentifyVersionLauncher(void)
 	{
 		gamemodes[wadlistsize] = retail;
 		wadlist[wadlistsize] = doomuwad;
+		dirlist[wadlistsize] = doomupath;
 		wadlistsize++;
 	}
 
@@ -852,6 +874,7 @@ void IdentifyVersionLauncher(void)
 	{
 		gamemodes[wadlistsize] = registered;
 		wadlist[wadlistsize] = doomwad;
+		dirlist[wadlistsize] = doom1cpath;
 		wadlistsize++;
 	}
 
@@ -861,6 +884,7 @@ void IdentifyVersionLauncher(void)
 	{
 		gamemodes[wadlistsize] = shareware;
 		wadlist[wadlistsize] = doom1wad;
+		dirlist[wadlistsize] = doom1path;
 		wadlistsize++;
 	}
 }

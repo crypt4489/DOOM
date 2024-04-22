@@ -218,6 +218,8 @@ void *statcopy; // for statistics driver
 
 extern boolean messageNeedsInput;
 
+extern char doomdir[35];
+
 int G_CmdChecksum(ticcmd_t *cmd)
 {
     int i;
@@ -1295,7 +1297,7 @@ void G_DoSaveGame(void)
     int i;
 
     
-    sprintf(name, "%s"SAVEGAMENAME "%d.dsg", "mc0:/SKYDOOM/", savegameslot);
+    sprintf(name, "%s%s/"SAVEGAMENAME "%d.dsg", "mc0:", doomdir, savegameslot);
     description = savedescription;
 
     save_p = savebuffer = screens[1] + 0x4000;

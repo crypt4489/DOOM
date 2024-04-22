@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <libmc.h>
 
 #include "m_launcherBKGD.h"
 
@@ -28,11 +29,17 @@ u32 wadlistsize = 0;
 u32 wadselect = 0;
 
 char **wadlist = NULL;
+char **dirlist = NULL;
 
 GameMode_t *gamemodes = NULL;
 
 extern GameMode_t gamemode;
 extern char mainwad[25];
+extern char maindir[25];
+
+extern boolean useMemCard;
+extern char doomdir[35];
+extern sceMcTblGetDir saveentries[6];
 
 //pad stuff
 extern u32 port;
@@ -55,6 +62,7 @@ void M_LauncherInit(void)
     fontimage->color.b = 0x00;
 
     wadlist = malloc(sizeof(char *) * 10);
+    dirlist = malloc(sizeof(char *) * 10);
     gamemodes = (GameMode_t *)malloc(sizeof(GameMode_t) * 10);
 }
 
@@ -98,8 +106,27 @@ static void UpdatePad()
     if (new_pad & PAD_CROSS)
     {
         runninglauncher = false;
-        memcpy(mainwad, wadlist[wadselect], strlen(wadlist[wadselect]));
+        strcpy(mainwad, wadlist[wadselect]);
+        strcpy(maindir, dirlist[wadselect]);
         gamemode = gamemodes[wadselect];
+
+        if (useMemCard)
+        {
+            char all[40];
+            sprintf(doomdir, "%s%s%s", doomdir, "/", maindir);
+            sprintf(all, "%s/*", doomdir);
+
+            int ret = mcGetDir(0, 0, all, 0, 6, saveentries);
+
+            mcSync(0, NULL, &ret);
+
+            if (ret == -4)
+            {
+                mcMkDir(0, 0, doomdir);
+                mcSync(0, NULL, &ret);
+            }
+
+        }
     }
 
     old_pad = currData;
@@ -149,11 +176,13 @@ void M_LauncherDeinit(void)
     for (int i = 0; i<wadlistsize; i++)
     {
         free(wadlist[i]);
+        free(dirlist[i]);
     }
-
+    free(dirlist);
     free(wadlist);
     free(gamemodes);
 
     wadlist = NULL;
+    dirlist = NULL;
     gamemodes = NULL;
 }
