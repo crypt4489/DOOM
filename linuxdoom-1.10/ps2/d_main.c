@@ -333,6 +333,10 @@ void D_Display (void)
 			  y,0,W_CacheLumpName ("M_PAUSE", PU_CACHE));
     } 
 	*/
+
+	patch_t *diskimage = (patch_t*)W_CacheLumpName ("STDISK", PU_CACHE);
+
+	V_DrawPatch(SCREENWIDTH-1-diskimage->width, SCREENHEIGHT-1-diskimage->height, 0, diskimage);
 	
 
     // menus go directly to the screen
