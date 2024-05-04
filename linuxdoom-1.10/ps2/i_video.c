@@ -464,6 +464,7 @@ void I_InitGraphics(void)
 
 	InitTextureResources(image, 0);
 
+	image->texbuf.info.function = TEXTURE_FUNCTION_DECAL;
 	image->lod.mag_filter = LOD_MAG_LINEAR;
 	image->lod.min_filter = LOD_MIN_LINEAR;
 
